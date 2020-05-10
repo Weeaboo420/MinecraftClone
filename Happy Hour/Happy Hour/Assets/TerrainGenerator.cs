@@ -9,7 +9,10 @@ using System.Linq;
 public class TerrainGenerator : MonoBehaviour
 {
     private MeshFilter _meshFilter;    
-    private int chunkWidth = 16, chunkHeight = 16;
+    private int chunkWidth = 16, chunkHeight = 10;
+
+    public GameObject Vertex;
+    public bool debug = false;
 
     void Start()
     {
@@ -41,9 +44,9 @@ public class TerrainGenerator : MonoBehaviour
 
 
         //Second pass, actual mesh generation
-        for (int x = 0; x < chunkWidth; x++)
+        for (int y = 0; y < chunkHeight; y++)
         {
-            for (int y = 0; y < chunkHeight; y++)
+            for (int x = 0; x < chunkWidth; x++)
             {
                 for (int z = 0; z < chunkWidth; z++)
                 {
@@ -90,12 +93,26 @@ public class TerrainGenerator : MonoBehaviour
                     #endregion
 
                     //Top faces (y+)
-                    triangles[0 + (blockCount * 36)] = 0 + (blockCount * 24);
-                    triangles[1 + (blockCount * 36)] = 1 + (blockCount * 24);
-                    triangles[2 + (blockCount * 36)] = 2 + (blockCount * 24);
-                    triangles[3 + (blockCount * 36)] = 2 + (blockCount * 24);
-                    triangles[4 + (blockCount * 36)] = 3 + (blockCount * 24);
-                    triangles[5 + (blockCount * 36)] = 0 + (blockCount * 24);
+                    if (y + 1 < chunkHeight)
+                    {
+                        if (!isOpaqueBlock[x, y + 1, z])
+                        {
+                            triangles[0 + (blockCount * 36)] = 0 + (blockCount * 24);
+                            triangles[1 + (blockCount * 36)] = 1 + (blockCount * 24);
+                            triangles[2 + (blockCount * 36)] = 2 + (blockCount * 24);
+                            triangles[3 + (blockCount * 36)] = 2 + (blockCount * 24);
+                            triangles[4 + (blockCount * 36)] = 3 + (blockCount * 24);
+                            triangles[5 + (blockCount * 36)] = 0 + (blockCount * 24);
+                        }
+                    } else
+                    {
+                        triangles[0 + (blockCount * 36)] = 0 + (blockCount * 24);
+                        triangles[1 + (blockCount * 36)] = 1 + (blockCount * 24);
+                        triangles[2 + (blockCount * 36)] = 2 + (blockCount * 24);
+                        triangles[3 + (blockCount * 36)] = 2 + (blockCount * 24);
+                        triangles[4 + (blockCount * 36)] = 3 + (blockCount * 24);
+                        triangles[5 + (blockCount * 36)] = 0 + (blockCount * 24);
+                    }
 
                     //Front faces (-z)
                     if (z - 1 > -1)
@@ -190,12 +207,26 @@ public class TerrainGenerator : MonoBehaviour
                     }
 
                     //Bottom faces (-y)
-                    triangles[30 + (blockCount * 36)] = 7 + (blockCount * 24);
-                    triangles[31 + (blockCount * 36)] = 6 + (blockCount * 24);
-                    triangles[32 + (blockCount * 36)] = 5 + (blockCount * 24);
-                    triangles[33 + (blockCount * 36)] = 5 + (blockCount * 24);
-                    triangles[34 + (blockCount * 36)] = 4 + (blockCount * 24);
-                    triangles[35 + (blockCount * 36)] = 7 + (blockCount * 24);
+                    if (y - 1 > -1)
+                    {
+                        if (!isOpaqueBlock[x, y - 1, z])
+                        {
+                            triangles[30 + (blockCount * 36)] = 7 + (blockCount * 24);
+                            triangles[31 + (blockCount * 36)] = 6 + (blockCount * 24);
+                            triangles[32 + (blockCount * 36)] = 5 + (blockCount * 24);
+                            triangles[33 + (blockCount * 36)] = 5 + (blockCount * 24);
+                            triangles[34 + (blockCount * 36)] = 4 + (blockCount * 24);
+                            triangles[35 + (blockCount * 36)] = 7 + (blockCount * 24);
+                        }
+                    } else
+                    {
+                        triangles[30 + (blockCount * 36)] = 7 + (blockCount * 24);
+                        triangles[31 + (blockCount * 36)] = 6 + (blockCount * 24);
+                        triangles[32 + (blockCount * 36)] = 5 + (blockCount * 24);
+                        triangles[33 + (blockCount * 36)] = 5 + (blockCount * 24);
+                        triangles[34 + (blockCount * 36)] = 4 + (blockCount * 24);
+                        triangles[35 + (blockCount * 36)] = 7 + (blockCount * 24);
+                    }
 
                     //Top face, pair 1
                     uvs[0 + (blockCount * 24)] = new Vector2(1, 1);
@@ -243,11 +274,19 @@ public class TerrainGenerator : MonoBehaviour
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uvs;
-
+        
+        mesh.RecalculateNormals();
         mesh.RecalculateTangents();
-        mesh.RecalculateNormals();        
 
-        _meshFilter.mesh = mesh;        
+        _meshFilter.mesh = mesh;
+
+        if (debug)
+        {
+            foreach (Vector3 vertex in vertices)
+            {
+                Instantiate(Vertex, vertex, Quaternion.identity);
+            }
+        }
 
     }
 

@@ -26,10 +26,10 @@ public class FreeModeCamera : MonoBehaviour
         {
             if (!sprinting)
             {
-                speedMultiplier = 0.5f;
+                speedMultiplier = 0.65f;
             } else
             {
-                speedMultiplier = 0.65f;
+                speedMultiplier = 0.9f;
             }
         }
 

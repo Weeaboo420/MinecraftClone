@@ -11,8 +11,7 @@ public class FreeModeCamera : MonoBehaviour
     private bool movingCamera = true, sprinting = false;
     private Camera _camera;
 
-    public GameObject waterTile;
-    public bool shouldFollow;
+    public GameObject sunLight;    
 
     void Start()
     {
@@ -45,13 +44,10 @@ public class FreeModeCamera : MonoBehaviour
     void Update()
     {
 
-        if (shouldFollow)
-        {
-            Vector3 waterTilePos = waterTile.transform.position;
-            waterTilePos.x = transform.position.x;
-            waterTilePos.z = transform.position.z;
-            waterTile.transform.position = waterTilePos;
-        }
+        //Make the sunlight always be a constant distance away from the player
+        Vector3 sunLightPos = sunLight.transform.position;
+        sunLightPos = transform.position;
+        sunLight.transform.position = sunLightPos;
 
         //Basic setup
         movingCamera = Input.GetMouseButton(1);

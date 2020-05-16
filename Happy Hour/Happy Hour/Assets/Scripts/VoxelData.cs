@@ -6,12 +6,22 @@ using UnityEngine;
 public class Voxel
 {
     private VoxelData.VoxelNames _name;    
-    private bool _opaque;    
+    private bool _opaque;
+    private int _id;
 
-    public Voxel(VoxelData.VoxelNames name, bool opaque)
+    public Voxel(VoxelData.VoxelNames name, bool opaque, int id)
     {
         _name = name;
         _opaque = opaque;
+        _id = id;
+    }
+
+    public int Id
+    {
+        get 
+        {
+            return _id;
+        }
     }
 
     public VoxelData.VoxelNames Name
@@ -37,13 +47,15 @@ public static class VoxelData
     public enum VoxelNames 
     { 
         Air = 0,
-        Dirt = 1
+        Dirt = 1,
+        Grass = 2
     }
 
     private static List<Voxel> _voxels = new List<Voxel>()
     {
-        new Voxel(VoxelNames.Air, false),
-        new Voxel(VoxelNames.Dirt, true)
+        new Voxel(VoxelNames.Air, false, 0),
+        new Voxel(VoxelNames.Dirt, true, 1),
+        new Voxel(VoxelNames.Grass, true, 2)
     };
 
     public static Voxel GetVoxel(VoxelNames name)

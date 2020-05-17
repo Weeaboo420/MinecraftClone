@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
-using System;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
@@ -12,22 +11,14 @@ public class TerrainGenerator : MonoBehaviour
     private MeshFilter _meshFilter;
     private Voxel[,,] voxelData;
     private int chunkWidth = 16, chunkHeight = 10;
-    public int textureAtlasWidth, singleTextureWidth;
-    private Texture2D atlas;
-
+    private float artifactOffset = 0.0015f;
 
     public GameObject VertexPrefab;
     private GameObject _vertexObj;
-    public float xOffset, yOffset;
-    private float xScale = 0.1f, yScale = 0.1f;
-
     void Start()
     {
         _meshFilter = GetComponent<MeshFilter>();
-        Generate();        
-        atlas = (Texture2D)AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/atlas.png");
-        textureAtlasWidth = atlas.width;
-        singleTextureWidth = atlas.width/10;
+        Generate();
     }
 
     private void CheckMesh()
@@ -52,8 +43,7 @@ public class TerrainGenerator : MonoBehaviour
                     count += 1;
                 }
             }
-        }
-        Debug.Log("Returned block: " + block);
+        }        
         return block;
     }
 
@@ -92,7 +82,7 @@ public class TerrainGenerator : MonoBehaviour
                 posInChunk.x = Mathf.FloorToInt(posInChunk.x);
                 posInChunk.y = Mathf.FloorToInt(posInChunk.y);
                 posInChunk.z = Mathf.FloorToInt(posInChunk.z);
-                chunk.GetComponent<TerrainGenerator>().SetBlock((int) posInChunk.x, (int) posInChunk.y, (int) posInChunk.z, VoxelData.VoxelNames.Air);
+                chunk.GetComponent<TerrainGenerator>().SetBlock((int) posInChunk.x, (int) posInChunk.y, (int) posInChunk.z, VoxelData.VoxelNames.Glass);
 
             }
             
@@ -103,49 +93,55 @@ public class TerrainGenerator : MonoBehaviour
     {
         if(x >= 0 && x < voxelData.GetLength(0) && y >= 0 && y < voxelData.GetLength(1) && z >= 0 && z < voxelData.GetLength(2))
         {
-            CheckMesh();
-            Voxel[,,] newVoxels = voxelData;
-            newVoxels[x, y, z] = VoxelData.GetVoxel(block);
-            Generate(newVoxels);
+            CheckMesh();            
+            voxelData[x, y, z] = VoxelData.GetVoxel(block);
+            Generate();
         }
     }
 
-    private void Generate(Voxel[,,] voxels = null)
+    private void Generate()
     {
         int blockCount = 0;
         Vector3[] vertices = new Vector3[8 * 3 * chunkWidth * chunkWidth * chunkHeight];
         int[] triangles = new int[36 * chunkWidth * chunkWidth * chunkHeight];
         Vector2[] uvs = new Vector2[8 * 3 * chunkWidth * chunkWidth * chunkHeight];
-        Voxel[,,] _voxels = new Voxel[chunkWidth, chunkHeight, chunkWidth];
-
-        if(voxels != null)
-        {
-            _voxels = voxels;
-        } 
-        
-        else 
+         
+        if(voxelData == null)
         {
             //First pass, for voxel data
+            voxelData = new Voxel[chunkWidth, chunkHeight, chunkWidth];
             for (int y = 0; y < chunkHeight; y++)
             {
                 for (int x = 0; x < chunkWidth; x++)
                 {
                     for (int z = 0; z < chunkWidth; z++)
                     {
-                        if(y != chunkHeight-1)
+
+                        if(y <= 5)
                         {
-                            _voxels[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Dirt);
-                        } else {
-                            _voxels[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Grass);
+                            if(Random.Range(0f, 1f) <= 0.5f)
+                            {
+                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Stone);
+                            } else {
+                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Dirt);
+                            }
                         }
+
+                        if(y < chunkHeight-1 && y > 5)
+                        {
+                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Dirt);
+                        } 
+                        
+                        if(y == chunkHeight - 1)
+                        {
+                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Grass);
+                        }
+
                     }
                 }
             }
 
-
         }
-
-        voxelData = _voxels;        
         //Second pass, actual mesh generation
         for (int y = 0; y < chunkHeight; y++)
         {
@@ -195,13 +191,13 @@ public class TerrainGenerator : MonoBehaviour
 
                     #endregion
 
-                    if (_voxels[x, y, z].Opaque)
+                    if (voxelData[x, y, z].Opaque || voxelData[x, y, z].Name == VoxelData.VoxelNames.Glass)
                     {
 
                         //Top faces (y+)
                         if (y + 1 < chunkHeight)
                         {
-                            if (!_voxels[x, y + 1, z].Opaque)
+                            if (!voxelData[x, y + 1, z].Opaque || voxelData[x, y, z].Name == VoxelData.VoxelNames.Glass && voxelData[x, y + 1, z].Name != VoxelData.VoxelNames.Glass)
                             {
                                 triangles[0 + (blockCount * 36)] = 0 + (blockCount * 24);
                                 triangles[1 + (blockCount * 36)] = 1 + (blockCount * 24);
@@ -224,7 +220,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Front faces (-z)
                         if (z - 1 > -1)
                         {
-                            if (!_voxels[x, y, z - 1].Opaque)
+                            if (!voxelData[x, y, z - 1].Opaque && voxelData[x, y, z - 1].Name != VoxelData.VoxelNames.Glass)
                             {
                                 triangles[6 + (blockCount * 36)] = 12 + (blockCount * 24);
                                 triangles[7 + (blockCount * 36)] = 8 + (blockCount * 24);
@@ -232,6 +228,7 @@ public class TerrainGenerator : MonoBehaviour
                                 triangles[9 + (blockCount * 36)] = 11 + (blockCount * 24);
                                 triangles[10 + (blockCount * 36)] = 15 + (blockCount * 24);
                                 triangles[11 + (blockCount * 36)] = 12 + (blockCount * 24);
+
                             }
                         }
                         else
@@ -247,7 +244,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Left faces (-x)
                         if (x - 1 > -1)
                         {
-                            if (!_voxels[x - 1, y, z].Opaque)
+                            if (!voxelData[x - 1, y, z].Opaque || voxelData[x, y, z].Name == VoxelData.VoxelNames.Glass && voxelData[x - 1, y, z].Name != VoxelData.VoxelNames.Glass)
                             {
                                 triangles[12 + (blockCount * 36)] = 21 + (blockCount * 24);
                                 triangles[13 + (blockCount * 36)] = 17 + (blockCount * 24);
@@ -270,7 +267,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Right faces (+x)
                         if (x + 1 < chunkWidth)
                         {
-                            if (!_voxels[x + 1, y, z].Opaque)
+                            if (!voxelData[x + 1, y, z].Opaque || voxelData[x, y, z].Name == VoxelData.VoxelNames.Glass && voxelData[x + 1, y, z].Name != VoxelData.VoxelNames.Glass)
                             {
                                 triangles[18 + (blockCount * 36)] = 23 + (blockCount * 24);
                                 triangles[19 + (blockCount * 36)] = 19 + (blockCount * 24);
@@ -293,7 +290,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Back faces (+z)
                         if (z + 1 < chunkWidth)
                         {
-                            if (!_voxels[x, y, z + 1].Opaque)
+                            if (!voxelData[x, y, z + 1].Opaque || voxelData[x, y, z].Name == VoxelData.VoxelNames.Glass && voxelData[x, y, z + 1].Name != VoxelData.VoxelNames.Glass)
                             {
                                 triangles[24 + (blockCount * 36)] = 14 + (blockCount * 24);
                                 triangles[25 + (blockCount * 36)] = 10 + (blockCount * 24);
@@ -316,7 +313,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Bottom faces (-y)
                         if (y - 1 > -1)
                         {
-                            if (!_voxels[x, y - 1, z].Opaque)
+                            if (!voxelData[x, y - 1, z].Opaque || voxelData[x, y, z].Name == VoxelData.VoxelNames.Glass && voxelData[x, y - 1, z].Name != VoxelData.VoxelNames.Glass)
                             {
                                 triangles[30 + (blockCount * 36)] = 7 + (blockCount * 24);
                                 triangles[31 + (blockCount * 36)] = 6 + (blockCount * 24);
@@ -399,7 +396,7 @@ public class TerrainGenerator : MonoBehaviour
                     {
                         if(uvs[j].x == 0.1f)
                         {
-                            uvs[j].x = (blockId * 0.1f);
+                            uvs[j].x = (blockId * 0.1f) - artifactOffset;
 
                             if(uvs[j].x < 0f)
                             {
@@ -409,15 +406,13 @@ public class TerrainGenerator : MonoBehaviour
                             if(uvs[j].x > 1f)
                             {
                                 uvs[j].x = 1f;
-                            }
-
-                            //Debug.Log((blockId * 0.1f) + " (0.1x), " + blockId);
+                            }                            
 
                         }
 
                         if(uvs[j].x == 0f)
                         {
-                            uvs[j].x = (blockId * 0.1f) - 0.1f;
+                            uvs[j].x = (blockId * 0.1f) - 0.1f + artifactOffset;
 
                             if(uvs[j].x < 0f)
                             {
@@ -427,10 +422,18 @@ public class TerrainGenerator : MonoBehaviour
                             if(uvs[j].x > 1f)
                             {
                                 uvs[j].x = 1f;
-                            }
+                            }                            
+                        }
 
-                            //Debug.Log((blockId * 0.1f) + " (0x), " + blockId);
-                        }            
+                            if(uvs[j].y == 0f)
+                        {
+                            uvs[j].y = uvs[j].y + artifactOffset;
+                        }
+
+                        if(uvs[j].y == 0.1f)
+                        {
+                            uvs[j].y = uvs[j].y - artifactOffset;
+                        }        
 
                     }
                 }

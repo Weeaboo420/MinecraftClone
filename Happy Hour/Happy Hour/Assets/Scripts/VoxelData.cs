@@ -48,14 +48,18 @@ public static class VoxelData
     { 
         Air = 0,
         Dirt = 1,
-        Grass = 2
+        Grass = 2,
+        Stone = 3,
+        Glass = 4
     }
 
     private static List<Voxel> _voxels = new List<Voxel>()
     {
         new Voxel(VoxelNames.Air, false, 0),
         new Voxel(VoxelNames.Dirt, true, 1),
-        new Voxel(VoxelNames.Grass, true, 2)
+        new Voxel(VoxelNames.Grass, true, 2),
+        new Voxel(VoxelNames.Stone, true, 3),
+        new Voxel(VoxelNames.Glass, false, 4)
     };
 
     public static Voxel GetVoxel(VoxelNames name)

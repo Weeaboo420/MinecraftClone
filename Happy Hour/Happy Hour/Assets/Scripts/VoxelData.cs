@@ -50,7 +50,8 @@ public static class VoxelData
         Dirt = 1,
         Grass = 2,
         Stone = 3,
-        Glass = 4
+        Glass = 4,
+        Coal = 5
     }
 
     private static List<Voxel> _voxels = new List<Voxel>()
@@ -59,7 +60,8 @@ public static class VoxelData
         new Voxel(VoxelNames.Dirt, true, 1),
         new Voxel(VoxelNames.Grass, true, 2),
         new Voxel(VoxelNames.Stone, true, 3),
-        new Voxel(VoxelNames.Glass, false, 4)
+        new Voxel(VoxelNames.Glass, true, 4),
+        new Voxel(VoxelNames.Coal, true, 5)
     };
 
     public static Voxel GetVoxel(VoxelNames name)

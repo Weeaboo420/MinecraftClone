@@ -46,30 +46,48 @@ public class Manager : MonoBehaviour
 
     void Awake()
     {
-        /*if(PlayerPrefs.HasKey("Beta-Key"))
+        if(PlayerPrefs.HasKey("Beta-Key"))
         {
             if(IsValidKey(PlayerPrefs.GetString("Beta-Key")))
             {
                 SceneManager.LoadScene(1);
             }
-        }*/
+        }
     }
 
-    /*IEnumerator GetKeys()
+    IEnumerator GetKeys()
     {
-        UnityWebRequest request = new UnityWebRequest("")
-    }*/
+        UnityWebRequest request = new UnityWebRequest("https://raw.githubusercontent.com/Weeaboo420/MinecraftClone/master/Happy%20Hour/Happy%20Hour/Assets/Misc/keys.json?token=AKKCU4PIN45SSNLE32DPMLC6YFU6Q");        
+        request.downloadHandler = new DownloadHandlerBuffer();
+        yield return request.SendWebRequest();
+
+        if(request.isNetworkError || request.isHttpError)
+        {
+            Debug.Log(request.error);
+        }
+
+        else
+        {
+            List<string> loadedKeys = JsonUtility.FromJson<List<string>>(request.downloadHandler.text);
+            foreach(string key in loadedKeys)
+            {
+                Debug.Log(key);
+            }
+        }
+
+    }
 
     public void Verify()
     {
+
+        //StartCoroutine("GetKeys");
+
         if(IsValidKey(keyField.text))
         {            
             invalidKeyText.enabled = false;
             PlayerPrefs.SetString("Beta-Key", keyField.text);
             SceneManager.LoadScene(1);
         }
-
-
 
         else 
         {            

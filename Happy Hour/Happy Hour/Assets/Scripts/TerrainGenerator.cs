@@ -49,6 +49,19 @@ public class TerrainGenerator : MonoBehaviour
         return block;
     }
 
+    //Coordinates labeled with "1" refer to the block we're looking at,
+    //the ones labeled with "2" refer to the current block that we're trying to
+    //determine whether or not to draw a face for.
+    private bool CanDraw(int x1, int y1, int z1, int x2, int y2, int z2)
+    {
+        if(!voxelData[x2, y2, z2].Opaque && voxelData[x1, y1, z1].Id != voxelData[x2, y2, z2].Id || !voxelData[x1, y1, z1].Opaque && voxelData[x2, y2, z2].Opaque)
+        {            
+            return true;
+        }
+
+        return false;
+    }
+
     void Update()
     {
 
@@ -193,13 +206,13 @@ public class TerrainGenerator : MonoBehaviour
 
                     #endregion
 
-                    if (voxelData[x, y, z].Opaque)
+                    if (voxelData[x, y, z].Id != 0)
                     {
 
                         //Top faces (y+)
                         if (y + 1 < chunkHeight)
                         {
-                            if (!voxelData[x, y + 1, z].Opaque || voxelData[x, y + 1, z].Opaque == true && voxelData[x, y + 1, z].Name == VoxelData.VoxelNames.Glass && voxelData[x, y, z].Name != VoxelData.VoxelNames.Glass)
+                            if (CanDraw(x, y + 1, z, x, y, z))
                             {
                                 triangles[0 + (blockCount * 36)] = 0 + (blockCount * 24);
                                 triangles[1 + (blockCount * 36)] = 1 + (blockCount * 24);
@@ -222,7 +235,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Front faces (-z)
                         if (z - 1 > -1)
                         {
-                            if (!voxelData[x, y, z - 1].Opaque || voxelData[x, y, z - 1].Opaque == true && voxelData[x, y, z - 1].Name == VoxelData.VoxelNames.Glass && voxelData[x, y, z].Name != VoxelData.VoxelNames.Glass)
+                            if (CanDraw(x, y, z - 1, x, y, z))
                             {
                                 triangles[6 + (blockCount * 36)] = 12 + (blockCount * 24);
                                 triangles[7 + (blockCount * 36)] = 8 + (blockCount * 24);
@@ -246,7 +259,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Left faces (-x)
                         if (x - 1 > -1)
                         {
-                            if (!voxelData[x - 1, y, z].Opaque || voxelData[x - 1, y, z].Opaque == true && voxelData[x - 1, y, z].Name == VoxelData.VoxelNames.Glass && voxelData[x, y, z].Name != VoxelData.VoxelNames.Glass)
+                            if (CanDraw(x - 1, y, z, x, y, z))
                             {
                                 triangles[12 + (blockCount * 36)] = 21 + (blockCount * 24);
                                 triangles[13 + (blockCount * 36)] = 17 + (blockCount * 24);
@@ -269,7 +282,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Right faces (+x)
                         if (x + 1 < chunkWidth)
                         {
-                            if (!voxelData[x + 1, y, z].Opaque || voxelData[x + 1, y, z].Opaque == true && voxelData[x + 1, y, z].Name == VoxelData.VoxelNames.Glass && voxelData[x, y, z].Name != VoxelData.VoxelNames.Glass)
+                            if (CanDraw(x + 1, y, z, x, y, z))
                             {
                                 triangles[18 + (blockCount * 36)] = 23 + (blockCount * 24);
                                 triangles[19 + (blockCount * 36)] = 19 + (blockCount * 24);
@@ -292,7 +305,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Back faces (+z)
                         if (z + 1 < chunkWidth)
                         {
-                            if (!voxelData[x, y, z + 1].Opaque || voxelData[x, y, z + 1].Opaque == true && voxelData[x, y, z + 1].Name == VoxelData.VoxelNames.Glass && voxelData[x, y, z].Name != VoxelData.VoxelNames.Glass)
+                            if (CanDraw(x, y, z + 1, x, y, z))
                             {
                                 triangles[24 + (blockCount * 36)] = 14 + (blockCount * 24);
                                 triangles[25 + (blockCount * 36)] = 10 + (blockCount * 24);
@@ -315,7 +328,7 @@ public class TerrainGenerator : MonoBehaviour
                         //Bottom faces (-y)
                         if (y - 1 > -1)
                         {
-                            if (!voxelData[x, y - 1, z].Opaque || voxelData[x, y - 1, z].Opaque == true && voxelData[x, y - 1, z].Name == VoxelData.VoxelNames.Glass && voxelData[x, y, z].Name != VoxelData.VoxelNames.Glass)
+                            if (CanDraw(x, y - 1, z, x, y, z))
                             {
                                 triangles[30 + (blockCount * 36)] = 7 + (blockCount * 24);
                                 triangles[31 + (blockCount * 36)] = 6 + (blockCount * 24);

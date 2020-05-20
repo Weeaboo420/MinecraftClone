@@ -54,7 +54,7 @@ public class TerrainGenerator : MonoBehaviour
     //determine whether or not to draw a face for.
     private bool CanDraw(int x1, int y1, int z1, int x2, int y2, int z2)
     {
-        if(!voxelData[x2, y2, z2].Opaque && voxelData[x1, y1, z1].Id != voxelData[x2, y2, z2].Id || !voxelData[x1, y1, z1].Opaque && voxelData[x2, y2, z2].Opaque)
+        if(!voxelData[x2, y2, z2].Opaque && voxelData[x1, y1, z1].Id != voxelData[x2, y2, z2].Id && !voxelData[x1, y1, z1].Opaque || !voxelData[x1, y1, z1].Opaque && voxelData[x2, y2, z2].Opaque)
         {            
             return true;
         }
@@ -131,15 +131,20 @@ public class TerrainGenerator : MonoBehaviour
                 {
                     for (int z = 0; z < chunkWidth; z++)
                     {
-
-                        if(y <= 5)
+                        
+                        if(y <= 5 && y > 0)
                         {
-                            if(Random.Range(0f, 1f) <= 0.88f)
+                            if(Random.Range(0f, 1f) <= 0.935f)
                             {
                                 voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Stone);
                             } else {
                                 voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Coal);
                             }
+                        }
+
+                        if(y == 0)
+                        {
+                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Cage);
                         }
 
                         if(y < chunkHeight-1 && y > 5)

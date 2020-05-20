@@ -9,7 +9,7 @@ using System.Linq;
 public class TerrainGenerator : MonoBehaviour
 {
     private MeshFilter _meshFilter;
-    private Voxel[,,] voxelData;
+    private byte[,,] voxelData;
     private int chunkWidth = 16, chunkHeight = 10;
     private float artifactOffset = 0.0005f;
     private PlayerData playerData;
@@ -28,7 +28,7 @@ public class TerrainGenerator : MonoBehaviour
         Destroy(GetComponent<MeshCollider>());
     }
 
-    private int GetBlock(int blockIndex)
+    private int GetBlockId(int blockIndex)
     {                
         int count = 0;
         int block = 0;
@@ -40,7 +40,7 @@ public class TerrainGenerator : MonoBehaviour
                 {                    
                     if(count == blockIndex)
                     {
-                        block = voxelData[x, y, z].Id;
+                        block = VoxelData.GetVoxel(voxelData[x, y, z]).Id;
                     }
                     count += 1;
                 }
@@ -49,12 +49,17 @@ public class TerrainGenerator : MonoBehaviour
         return block;
     }
 
+    private Voxel GetBlock(byte id)
+    {
+        return VoxelData.GetVoxel(id);
+    }
+
     //Coordinates labeled with "1" refer to the block we're looking at,
     //the ones labeled with "2" refer to the current block that we're trying to
     //determine whether or not to draw a face for.
     private bool CanDraw(int x1, int y1, int z1, int x2, int y2, int z2)
     {
-        if(!voxelData[x2, y2, z2].Opaque && voxelData[x1, y1, z1].Id != voxelData[x2, y2, z2].Id && !voxelData[x1, y1, z1].Opaque || !voxelData[x1, y1, z1].Opaque && voxelData[x2, y2, z2].Opaque)
+        if(!GetBlock(voxelData[x2, y2, z2]).Opaque && GetBlock(voxelData[x1, y1, z1]).Id != GetBlock(voxelData[x2, y2, z2]).Id && !GetBlock(voxelData[x1, y1, z1]).Opaque || !GetBlock(voxelData[x1, y1, z1]).Opaque && GetBlock(voxelData[x2, y2, z2]).Opaque)
         {            
             return true;
         }
@@ -109,7 +114,7 @@ public class TerrainGenerator : MonoBehaviour
         if(x >= 0 && x < voxelData.GetLength(0) && y >= 0 && y < voxelData.GetLength(1) && z >= 0 && z < voxelData.GetLength(2))
         {
             CheckMesh();            
-            voxelData[x, y, z] = VoxelData.GetVoxel(block);
+            voxelData[x, y, z] = (byte)VoxelData.GetVoxel(block).Id;
             Generate();
         }
     }
@@ -124,7 +129,7 @@ public class TerrainGenerator : MonoBehaviour
         if(voxelData == null)
         {
             //First pass, for voxel data
-            voxelData = new Voxel[chunkWidth, chunkHeight, chunkWidth];
+            voxelData = new byte[chunkWidth, chunkHeight, chunkWidth];
             for (int y = 0; y < chunkHeight; y++)
             {
                 for (int x = 0; x < chunkWidth; x++)
@@ -136,25 +141,25 @@ public class TerrainGenerator : MonoBehaviour
                         {
                             if(Random.Range(0f, 1f) <= 0.935f)
                             {
-                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Stone);
+                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Stone).Id;
                             } else {
-                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Coal);
+                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Coal).Id;
                             }
                         }
 
                         if(y == 0)
                         {
-                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Cage);
+                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Cage).Id;
                         }
 
                         if(y < chunkHeight-1 && y > 5)
                         {
-                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Dirt);
+                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Dirt).Id;
                         } 
                         
                         if(y == chunkHeight - 1)
                         {
-                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Grass);
+                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Grass).Id;
                         }
 
                     }
@@ -211,7 +216,7 @@ public class TerrainGenerator : MonoBehaviour
 
                     #endregion
 
-                    if (voxelData[x, y, z].Id != 0)
+                    if (voxelData[x, y, z] != 0)
                     {
 
                         //Top faces (y+)
@@ -409,7 +414,7 @@ public class TerrainGenerator : MonoBehaviour
         {   
             if(i % 24 == 0)
             {
-                int blockId = GetBlock(point / 24);
+                int blockId = GetBlockId(point / 24);
                 if(blockId > 0)
                 {
                     for(int j = point; j < point + 24; j++)

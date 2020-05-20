@@ -7,16 +7,16 @@ public class Voxel
 {
     private VoxelData.VoxelNames _name;    
     private bool _opaque;
-    private int _id;
+    private byte _id;
 
-    public Voxel(VoxelData.VoxelNames name, bool opaque, int id)
+    public Voxel(VoxelData.VoxelNames name, bool opaque, byte id)
     {
         _name = name;
         _opaque = opaque;
         _id = id;
     }
 
-    public int Id
+    public byte Id
     {
         get 
         {
@@ -71,6 +71,16 @@ public static class VoxelData
         if (_voxels.Any(voxel => voxel.Name == name))
         {
             return _voxels.Find(voxel => voxel.Name == name);
+        }
+
+        return null;
+    }
+
+    public static Voxel GetVoxel(byte id)
+    {
+        if (_voxels.Any(voxel => voxel.Id == (int)id))
+        {
+            return _voxels.Find(voxel => voxel.Id == (int)id);
         }
 
         return null;

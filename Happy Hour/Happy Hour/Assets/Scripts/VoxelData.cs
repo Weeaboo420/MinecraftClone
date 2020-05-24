@@ -56,6 +56,15 @@ public static class VoxelData
         Kiwi = 7
     }
 
+    public static float ArtifactOffset
+    {
+        get
+        {
+            return 0.0005f;
+
+        }
+    }
+
     private static List<Voxel> _voxels = new List<Voxel>()
     {
         new Voxel(VoxelNames.Air, false, 0),

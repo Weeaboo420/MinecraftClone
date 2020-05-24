@@ -10,14 +10,12 @@ public class FreeModeCamera : MonoBehaviour
     private int inputs = 0;
     private bool movingCamera = true, sprinting = false;
     private Camera _camera;
-    private Camera _debugCamera;
 
-    public GameObject sunLight;    
+    public GameObject sunLight;
 
     void Start()
     {
-        _camera = GetComponent<Camera>();
-        _debugCamera = transform.Find("Debug Camera").GetComponent<Camera>();
+        _camera = GetComponent<Camera>();        
     }
 
     private void HandleSpeed()
@@ -90,14 +88,12 @@ public class FreeModeCamera : MonoBehaviour
             //Scollwheel down
             if (_camera.fieldOfView < maxFov)
             {
-                _camera.fieldOfView += fovIncrement;
-                _debugCamera.fieldOfView += fovIncrement;
+                _camera.fieldOfView += fovIncrement;                
             }
 
             if(_camera.fieldOfView > maxFov)
             {
-                _camera.fieldOfView = maxFov;
-                _debugCamera.fieldOfView = maxFov;
+                _camera.fieldOfView = maxFov;                
             }
         }
 
@@ -106,14 +102,12 @@ public class FreeModeCamera : MonoBehaviour
             //Scollwheel up
             if (_camera.fieldOfView > minFov)
             {
-                _camera.fieldOfView -= fovIncrement;
-                _debugCamera.fieldOfView -= fovIncrement;
+                _camera.fieldOfView -= fovIncrement;                
             }
 
             if (_camera.fieldOfView < minFov)
             {
-                _camera.fieldOfView = minFov;
-                _debugCamera.fieldOfView = minFov;
+                _camera.fieldOfView = minFov;                
             }
         }
 

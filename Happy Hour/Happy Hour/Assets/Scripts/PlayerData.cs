@@ -3,13 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerData : MonoBehaviour
 {
 
     private int selectedBlock = 0;
     private Text blockText;
-    
+    public GameObject uiBlock;
+
     public int Block
     {
         get 
@@ -28,6 +30,15 @@ public class PlayerData : MonoBehaviour
     {
         VoxelData.VoxelNames blockName = (VoxelData.VoxelNames)selectedBlock;
         blockText.text = blockName.ToString();
+
+        if(blockName == VoxelData.VoxelNames.Air)
+        {
+            uiBlock.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", null);
+        } else {
+            uiBlock.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", Resources.Load<Texture2D>("GUI/atlas"));
+            uiBlock.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((selectedBlock * 0.1f - 0.1f) + VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));           
+        }
+
     }
 
     void Update()
@@ -56,6 +67,11 @@ public class PlayerData : MonoBehaviour
 
             SelectedBlockChanged();
 
+        }
+
+        if(Input.GetKeyDown(KeyCode.Return))
+        {
+            GameObject.Find("World").GetComponent<World>().RegenerateWorld();
         }
 
     }

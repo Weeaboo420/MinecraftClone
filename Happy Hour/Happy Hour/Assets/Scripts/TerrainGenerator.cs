@@ -393,16 +393,16 @@ public class TerrainGenerator : MonoBehaviour
                         uvs[7 + (blockCount * 24)] = new Vector2(0, 0);
 
                         //Front face, pair 2
-                        uvs[8 + (blockCount * 24)] = new Vector2(1, 0);
-                        uvs[9 + (blockCount * 24)] = new Vector2(1, 1);
-                        uvs[10 + (blockCount * 24)] = new Vector2(0, 1);
-                        uvs[11 + (blockCount * 24)] = new Vector2(0, 0);
+                        uvs[8 + (blockCount * 24)] = new Vector2(1, 1);
+                        uvs[9 + (blockCount * 24)] = new Vector2(0, 1);
+                        uvs[10 + (blockCount * 24)] = new Vector2(1, 1);
+                        uvs[11 + (blockCount * 24)] = new Vector2(0, 1);
 
                         //Back face, pair 2
-                        uvs[12 + (blockCount * 24)] = new Vector2(1, 1);
-                        uvs[13 + (blockCount * 24)] = new Vector2(1, 0);
-                        uvs[14 + (blockCount * 24)] = new Vector2(0, 0);
-                        uvs[15 + (blockCount * 24)] = new Vector2(0, 1);
+                        uvs[12 + (blockCount * 24)] = new Vector2(1, 0);
+                        uvs[13 + (blockCount * 24)] = new Vector2(0, 0);
+                        uvs[14 + (blockCount * 24)] = new Vector2(1, 0);
+                        uvs[15 + (blockCount * 24)] = new Vector2(0, 0);
 
                         //Left face, pair 3
                         uvs[16 + (blockCount * 24)] = new Vector2(1, 1);

@@ -8,12 +8,22 @@ public class Voxel
     private VoxelData.VoxelNames _name;    
     private bool _opaque;
     private byte _id;
+    private int[] _faces;
 
-    public Voxel(VoxelData.VoxelNames name, bool opaque, byte id)
+    public Voxel(VoxelData.VoxelNames name, bool opaque, byte id, int[] faces)
     {
         _name = name;
         _opaque = opaque;
         _id = id;
+        _faces = faces;
+    }
+
+    public int[] Faces
+    {
+        get
+        {
+            return _faces;
+        }
     }
 
     public byte Id
@@ -67,14 +77,17 @@ public static class VoxelData
 
     private static List<Voxel> _voxels = new List<Voxel>()
     {
-        new Voxel(VoxelNames.Air, false, 0),
-        new Voxel(VoxelNames.Dirt, true, 1),
-        new Voxel(VoxelNames.Grass, true, 2),
-        new Voxel(VoxelNames.Stone, true, 3),
-        new Voxel(VoxelNames.Glass, false, 4),
-        new Voxel(VoxelNames.Coal, true, 5),
-        new Voxel(VoxelNames.Cage, false, 6),
-        new Voxel(VoxelNames.Kiwi, true, 7)
+        //Currently there is a limitation in that the two faces on an axis must have
+        //the same texture index, otherwise the texture doesn't apply correctly and it
+        //just looks horrible
+        new Voxel(VoxelNames.Air, false, 0, new int[] {0, 0, 0, 0, 0, 0}),
+        new Voxel(VoxelNames.Dirt, true, 1, new int[] {1, 1, 1, 1, 1, 1}),
+        new Voxel(VoxelNames.Grass, true, 2, new int[] {2, 1, 8, 8, 8, 8}),
+        new Voxel(VoxelNames.Stone, true, 3, new int[] {3, 3, 3, 3, 3, 3}),
+        new Voxel(VoxelNames.Glass, false, 4, new int[] {4, 4, 4, 4, 4, 4}),
+        new Voxel(VoxelNames.Coal, true, 5, new int[] {5, 5, 5, 5, 5, 5}),
+        new Voxel(VoxelNames.Cage, false, 6, new int[] {6, 6, 6, 6, 6, 6}),
+        new Voxel(VoxelNames.Kiwi, true, 7, new int[] {7, 7, 7, 7, 7, 7})
     };
 
     public static Voxel GetVoxel(VoxelNames name)

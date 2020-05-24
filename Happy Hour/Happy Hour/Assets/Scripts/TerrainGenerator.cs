@@ -431,19 +431,27 @@ public class TerrainGenerator : MonoBehaviour
             uvs[i] = new Vector2(uvs[i].x * 0.1f, uvs[i].y * 0.1f);
         }
 
-        int point = 0;
+        int currentBlock = 0;
         for(int i = 0; i < uvs.Length; i++)
         {   
             if(i % 24 == 0)
             {
-                byte blockId = GetBlockId(point / 24);
+                byte blockId = GetBlockId(currentBlock / 24);
+                Voxel block = VoxelData.GetVoxel(blockId);
+
+                //This tells us which face we are setting the texture for,
+                //Top, bottom, front, back, left, right
+                //0,   1,      2,     3,    4,    5
+                int blockFace = 0;                
+
                 if(blockId > 0)
                 {
-                    for(int j = point; j < point + 24; j++)
+                    for(int j = currentBlock; j < currentBlock + 24; j++)
                     {
+
                         if(uvs[j].x == 0.1f)
                         {
-                            uvs[j].x = (blockId * 0.1f) - artifactOffset;
+                            uvs[j].x = (block.Faces[blockFace] * 0.1f) - artifactOffset;                            
 
                             if(uvs[j].x < 0f)
                             {
@@ -459,7 +467,7 @@ public class TerrainGenerator : MonoBehaviour
 
                         if(uvs[j].x == 0f)
                         {
-                            uvs[j].x = (blockId * 0.1f) - 0.1f + artifactOffset;
+                            uvs[j].x = (block.Faces[blockFace] * 0.1f) - 0.1f + artifactOffset;
 
                             if(uvs[j].x < 0f)
                             {
@@ -472,20 +480,27 @@ public class TerrainGenerator : MonoBehaviour
                             }                            
                         }
 
-                            if(uvs[j].y == 0f)
+                        if(uvs[j].y == 0f)
                         {
-                            uvs[j].y = uvs[j].y + artifactOffset;
+                        uvs[j].y = uvs[j].y + artifactOffset;
                         }
 
                         if(uvs[j].y == 0.1f)
                         {
                             uvs[j].y = uvs[j].y - artifactOffset;
-                        }        
+                        } 
+
+
+                        //Block face handling
+                        if((j + 1) % 4 == 0 && blockFace < 5)
+                        {
+                            blockFace += 1;                        
+                        }                           
 
                     }
                 }
 
-                point += 24;
+                currentBlock += 24;
 
             }       
 

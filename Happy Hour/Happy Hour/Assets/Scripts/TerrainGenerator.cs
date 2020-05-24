@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using System;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
@@ -10,28 +11,33 @@ public class TerrainGenerator : MonoBehaviour
 {
     private MeshFilter _meshFilter;
     private byte[,,] voxelData;
-    private int chunkWidth = 16, chunkHeight = 10;
-    private float artifactOffset = 0.0005f;
-    private PlayerData playerData;
 
-    public GameObject VertexPrefab;
-    private GameObject vertexObj;
+    private int chunkWidth, chunkHeight;
+    private float artifactOffset = 0.0005f;
+
     void Start()
     {
-        _meshFilter = GetComponent<MeshFilter>();
-        playerData = GameObject.Find("PlayerData").GetComponent<PlayerData>();
-        Generate();
+        //Get the settings from WorldSettings
+        chunkWidth = WorldSettings.ChunkWidth;
+        chunkHeight = WorldSettings.ChunkHeight;
+
+        _meshFilter = GetComponent<MeshFilter>();        
+        SetData();
+        GenerateMesh();
     }
 
     private void CheckMesh()
     {
-        Destroy(GetComponent<MeshCollider>());
+        if(this.gameObject.TryGetComponent(out MeshCollider mc))
+        {            
+            Destroy(GetComponent<MeshCollider>());
+        }
     }
 
-    private int GetBlockId(int blockIndex)
+    private byte GetBlockId(int blockIndex)
     {                
         int count = 0;
-        int block = 0;
+        byte block = 0;
         for(int y = 0; y < voxelData.GetLength(1); y++)
         {
             for(int x = 0; x < voxelData.GetLength(0); x++)
@@ -62,74 +68,37 @@ public class TerrainGenerator : MonoBehaviour
         if(!GetBlock(voxelData[x2, y2, z2]).Opaque && GetBlock(voxelData[x1, y1, z1]).Id != GetBlock(voxelData[x2, y2, z2]).Id && !GetBlock(voxelData[x1, y1, z1]).Opaque || !GetBlock(voxelData[x1, y1, z1]).Opaque && GetBlock(voxelData[x2, y2, z2]).Opaque)
         {            
             return true;
-        }
+        } 
+
+        /*else if(x1 == x2 && y1 == y2 && z1 == z2)
+        {
+            return true;
+        }*/
 
         return false;
-    }
-
-    void Update()
-    {
-
-        if(Input.GetMouseButtonDown(0))
-        {
-
-            float distance = 50f;
-            Camera cam = GameObject.Find("Main Camera").GetComponent<Camera>();
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-
-            //DEBUG FEATURE
-            //Casts a ray from the mouse position, if it hits anything then it will either instantiate
-            //a new vertex prefab or move an existing one
-            if(Physics.Raycast(ray, out hit, distance))
-            {
-                if(vertexObj == null)
-                {   
-                    GameObject go;
-                    go = (GameObject)Instantiate(VertexPrefab, hit.point, Quaternion.identity);
-                    vertexObj = go;
-
-                } else {
-                    vertexObj.transform.position = hit.point;
-                }
-
-                //Grab a reference to the chunk that was clicked,
-                //calculate the relative position inside the chunk that
-                //was clicked, then round that position into integers
-                GameObject chunk = hit.transform.gameObject;
-                Vector3 posInChunk = hit.point - chunk.transform.position + new Vector3(0, 0.5f, 0);
-
-                posInChunk.x = Mathf.FloorToInt(posInChunk.x);
-                posInChunk.y = Mathf.FloorToInt(posInChunk.y);
-                posInChunk.z = Mathf.FloorToInt(posInChunk.z);
-                chunk.GetComponent<TerrainGenerator>().SetBlock((int) posInChunk.x, (int) posInChunk.y, (int) posInChunk.z, (VoxelData.VoxelNames)playerData.Block);
-
-            }
-            
-        }
     }
 
     public void SetBlock(int x, int y, int z, VoxelData.VoxelNames block)
     {
         if(x >= 0 && x < voxelData.GetLength(0) && y >= 0 && y < voxelData.GetLength(1) && z >= 0 && z < voxelData.GetLength(2))
-        {
-            CheckMesh();            
+        {                        
+            //Update the block we're currently looking at
+            CheckMesh();
             voxelData[x, y, z] = (byte)VoxelData.GetVoxel(block).Id;
-            Generate();
+            GenerateMesh();            
+
         }
     }
 
-    private void Generate()
+    private void SetData()
     {
-        int blockCount = 0;
-        Vector3[] vertices = new Vector3[8 * 3 * chunkWidth * chunkWidth * chunkHeight];
-        int[] triangles = new int[36 * chunkWidth * chunkWidth * chunkHeight];
-        Vector2[] uvs = new Vector2[8 * 3 * chunkWidth * chunkWidth * chunkHeight];
-         
+        Array names = Enum.GetValues(typeof(VoxelData.VoxelNames));
+        System.Random rand = new System.Random();
+        
         if(voxelData == null)
         {
             //First pass, for voxel data
-            voxelData = new byte[chunkWidth, chunkHeight, chunkWidth];
+            voxelData = new byte[chunkWidth, chunkHeight, chunkWidth];            
             for (int y = 0; y < chunkHeight; y++)
             {
                 for (int x = 0; x < chunkWidth; x++)
@@ -137,9 +106,11 @@ public class TerrainGenerator : MonoBehaviour
                     for (int z = 0; z < chunkWidth; z++)
                     {
                         
+                        //voxelData[x, y, z] = VoxelData.GetVoxel((VoxelData.VoxelNames)names.GetValue(rand.Next(names.Length))).Id;
+
                         if(y <= 5 && y > 0)
                         {
-                            if(Random.Range(0f, 1f) <= 0.935f)
+                            if(UnityEngine.Random.Range(0f, 1f) <= 0.935f)
                             {
                                 voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Stone).Id;
                             } else {
@@ -147,9 +118,10 @@ public class TerrainGenerator : MonoBehaviour
                             }
                         }
 
+                        //Lowest position in chunk, aka bedrock
                         if(y == 0)
                         {
-                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Cage).Id;
+                            voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Kiwi).Id;
                         }
 
                         if(y < chunkHeight-1 && y > 5)
@@ -157,6 +129,7 @@ public class TerrainGenerator : MonoBehaviour
                             voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Dirt).Id;
                         } 
                         
+                        //Highest position in chunk, aka grass
                         if(y == chunkHeight - 1)
                         {
                             voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Grass).Id;
@@ -167,6 +140,373 @@ public class TerrainGenerator : MonoBehaviour
             }
 
         }
+    }
+
+    //Converts a position to a block index in the chunk
+    private int ConvertToBlockIndex(int x, int y, int z)
+    {
+        int index = 0;
+        //Coordinates have a "c" as suffix because we want to distinguish between the values
+        //in the loops and the input arguments to this function.
+        for(int yc = 0; yc < chunkHeight; yc ++)
+        {
+            for(int xc = 0; xc < chunkWidth; xc ++)
+            {
+                for(int zc = 0; zc < chunkWidth; zc ++)
+                {
+                    if(xc == x && yc == y && zc == z)
+                    {                        
+                        return index;                        
+                    }
+
+                    index += 1;
+
+                }
+            }
+        }
+
+        return index;
+
+    }
+
+    //Update the faces for a specific block
+    private void UpdateMesh(int blockIndex, byte blockId, int x, int y, int z, bool debug = false)
+    {
+        if(debug)
+        {
+            Console.Clear();
+            Debug.Log(blockId);
+        }
+
+        Vector3[] vertices = _meshFilter.mesh.vertices;
+        int[] triangles = _meshFilter.mesh.triangles;
+        Vector2[] uvs = _meshFilter.mesh.uv;
+
+        if(blockId != 0)
+        {            
+        #region verts
+            vertices[0 + (blockIndex * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
+            vertices[1 + (blockIndex * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
+            vertices[2 + (blockIndex * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
+            vertices[3 + (blockIndex * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
+
+            vertices[4 + (blockIndex * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
+            vertices[5 + (blockIndex * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
+            vertices[6 + (blockIndex * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
+            vertices[7 + (blockIndex * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
+
+            //Second (z)
+            vertices[8 + (blockIndex * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
+            vertices[9 + (blockIndex * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
+            vertices[10 + (blockIndex * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
+            vertices[11 + (blockIndex * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
+
+            vertices[12 + (blockIndex * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
+            vertices[13 + (blockIndex * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
+            vertices[14 + (blockIndex * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
+            vertices[15 + (blockIndex * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
+
+            //Third (x)
+            vertices[16 + (blockIndex * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
+            vertices[17 + (blockIndex * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
+            vertices[18 + (blockIndex * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
+            vertices[19 + (blockIndex * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
+
+            vertices[20 + (blockIndex * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
+            vertices[21 + (blockIndex * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
+            vertices[22 + (blockIndex * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
+            vertices[23 + (blockIndex * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
+        #endregion
+
+        #region tris
+            //Top faces (y+)
+            if (y + 1 < chunkHeight)
+            {
+                if (CanDraw(x, y + 1, z, x, y, z))
+                {
+                    triangles[0 + (blockIndex * 36)] = 0 + (blockIndex * 24);
+                    triangles[1 + (blockIndex * 36)] = 1 + (blockIndex * 24);
+                    triangles[2 + (blockIndex * 36)] = 2 + (blockIndex * 24);
+                    triangles[3 + (blockIndex * 36)] = 2 + (blockIndex * 24);
+                    triangles[4 + (blockIndex * 36)] = 3 + (blockIndex * 24);
+                    triangles[5 + (blockIndex * 36)] = 0 + (blockIndex * 24);
+                }
+            }
+            else
+            {
+                triangles[0 + (blockIndex * 36)] = 0 + (blockIndex * 24);
+                triangles[1 + (blockIndex * 36)] = 1 + (blockIndex * 24);
+                triangles[2 + (blockIndex * 36)] = 2 + (blockIndex * 24);
+                triangles[3 + (blockIndex * 36)] = 2 + (blockIndex * 24);
+                triangles[4 + (blockIndex * 36)] = 3 + (blockIndex * 24);
+                triangles[5 + (blockIndex * 36)] = 0 + (blockIndex * 24);
+            }
+
+            //Front faces (-z)
+            if (z - 1 > -1)
+            {
+                if (CanDraw(x, y, z - 1, x, y, z))
+                {                    
+                    triangles[6 + (blockIndex * 36)] = 12 + (blockIndex * 24);
+                    triangles[7 + (blockIndex * 36)] = 8 + (blockIndex * 24);
+                    triangles[8 + (blockIndex * 36)] = 11 + (blockIndex * 24);
+                    triangles[9 + (blockIndex * 36)] = 11 + (blockIndex * 24);
+                    triangles[10 + (blockIndex * 36)] = 15 + (blockIndex * 24);
+                    triangles[11 + (blockIndex * 36)] = 12 + (blockIndex * 24);
+
+                }
+            }
+            else
+            {
+                triangles[6 + (blockIndex * 36)] = 12 + (blockIndex * 24);
+                triangles[7 + (blockIndex * 36)] = 8 + (blockIndex * 24);
+                triangles[8 + (blockIndex * 36)] = 11 + (blockIndex * 24);
+                triangles[9 + (blockIndex * 36)] = 11 + (blockIndex * 24);
+                triangles[10 + (blockIndex * 36)] = 15 + (blockIndex * 24);
+                triangles[11 + (blockIndex * 36)] = 12 + (blockIndex * 24);
+            }
+
+            //Left faces (-x)
+            if (x - 1 > -1)
+            {
+                if (CanDraw(x - 1, y, z, x, y, z))
+                {
+                    triangles[12 + (blockIndex * 36)] = 21 + (blockIndex * 24);
+                    triangles[13 + (blockIndex * 36)] = 17 + (blockIndex * 24);
+                    triangles[14 + (blockIndex * 36)] = 16 + (blockIndex * 24);
+                    triangles[15 + (blockIndex * 36)] = 16 + (blockIndex * 24);
+                    triangles[16 + (blockIndex * 36)] = 20 + (blockIndex * 24);
+                    triangles[17 + (blockIndex * 36)] = 21 + (blockIndex * 24);
+                }
+            }
+            else
+            {
+                triangles[12 + (blockIndex * 36)] = 21 + (blockIndex * 24);
+                triangles[13 + (blockIndex * 36)] = 17 + (blockIndex * 24);
+                triangles[14 + (blockIndex * 36)] = 16 + (blockIndex * 24);
+                triangles[15 + (blockIndex * 36)] = 16 + (blockIndex * 24);
+                triangles[16 + (blockIndex * 36)] = 20 + (blockIndex * 24);
+                triangles[17 + (blockIndex * 36)] = 21 + (blockIndex * 24);
+            }
+
+            //Right faces (+x)
+            if (x + 1 < chunkWidth)
+            {
+                if (CanDraw(x + 1, y, z, x, y, z))
+                {
+                    triangles[18 + (blockIndex * 36)] = 23 + (blockIndex * 24);
+                    triangles[19 + (blockIndex * 36)] = 19 + (blockIndex * 24);
+                    triangles[20 + (blockIndex * 36)] = 18 + (blockIndex * 24);
+                    triangles[21 + (blockIndex * 36)] = 18 + (blockIndex * 24);
+                    triangles[22 + (blockIndex * 36)] = 22 + (blockIndex * 24);
+                    triangles[23 + (blockIndex * 36)] = 23 + (blockIndex * 24);
+                }
+            }
+            else
+            {
+                triangles[18 + (blockIndex * 36)] = 23 + (blockIndex * 24);
+                triangles[19 + (blockIndex * 36)] = 19 + (blockIndex * 24);
+                triangles[20 + (blockIndex * 36)] = 18 + (blockIndex * 24);
+                triangles[21 + (blockIndex * 36)] = 18 + (blockIndex * 24);
+                triangles[22 + (blockIndex * 36)] = 22 + (blockIndex * 24);
+                triangles[23 + (blockIndex * 36)] = 23 + (blockIndex * 24);
+            }
+
+            //Back faces (+z)
+            if (z + 1 < chunkWidth)
+            {
+                if (CanDraw(x, y, z + 1, x, y, z))
+                {
+                    triangles[24 + (blockIndex * 36)] = 14 + (blockIndex * 24);
+                    triangles[25 + (blockIndex * 36)] = 10 + (blockIndex * 24);
+                    triangles[26 + (blockIndex * 36)] = 9 + (blockIndex * 24);
+                    triangles[27 + (blockIndex * 36)] = 9 + (blockIndex * 24);
+                    triangles[28 + (blockIndex * 36)] = 13 + (blockIndex * 24);
+                    triangles[29 + (blockIndex * 36)] = 14 + (blockIndex * 24);
+                }
+            }
+            else
+            {
+                triangles[24 + (blockIndex * 36)] = 14 + (blockIndex * 24);
+                triangles[25 + (blockIndex * 36)] = 10 + (blockIndex * 24);
+                triangles[26 + (blockIndex * 36)] = 9 + (blockIndex * 24);
+                triangles[27 + (blockIndex * 36)] = 9 + (blockIndex * 24);
+                triangles[28 + (blockIndex * 36)] = 13 + (blockIndex * 24);
+                triangles[29 + (blockIndex * 36)] = 14 + (blockIndex * 24);
+            }
+
+            //Bottom faces (-y)
+            if (y - 1 > -1)
+            {
+                if (CanDraw(x, y - 1, z, x, y, z))
+                {
+                    triangles[30 + (blockIndex * 36)] = 7 + (blockIndex * 24);
+                    triangles[31 + (blockIndex * 36)] = 6 + (blockIndex * 24);
+                    triangles[32 + (blockIndex * 36)] = 5 + (blockIndex * 24);
+                    triangles[33 + (blockIndex * 36)] = 5 + (blockIndex * 24);
+                    triangles[34 + (blockIndex * 36)] = 4 + (blockIndex * 24);
+                    triangles[35 + (blockIndex * 36)] = 7 + (blockIndex * 24);
+                }
+            }
+            else
+            {
+                triangles[30 + (blockIndex * 36)] = 7 + (blockIndex * 24);
+                triangles[31 + (blockIndex * 36)] = 6 + (blockIndex * 24);
+                triangles[32 + (blockIndex * 36)] = 5 + (blockIndex * 24);
+                triangles[33 + (blockIndex * 36)] = 5 + (blockIndex * 24);
+                triangles[34 + (blockIndex * 36)] = 4 + (blockIndex * 24);
+                triangles[35 + (blockIndex * 36)] = 7 + (blockIndex * 24);
+            }
+        #endregion
+
+        #region uvs
+        if(uvs[blockIndex / 4].x == 0.1f)
+        {
+            uvs[blockIndex / 4].x = (blockId * 0.1f) - artifactOffset;
+
+            if(uvs[blockIndex / 4].x < 0f)
+            {
+                uvs[blockIndex / 4].x = 0f;
+            }
+
+            if(uvs[blockIndex / 4].x > 1f)
+            {
+                uvs[blockIndex / 4].x = 1f;
+            }                            
+
+        }
+
+        if(uvs[blockIndex / 4].x == 0f)
+        {
+            uvs[blockIndex / 4].x = (blockId * 0.1f) - 0.1f + artifactOffset;
+
+            if(uvs[blockIndex / 4].x < 0f)
+            {
+                uvs[blockIndex / 4].x = 0f;
+            }
+
+            if(uvs[blockIndex / 4].x > 1f)
+            {
+                uvs[blockIndex / 4].x = 1f;
+            }                            
+        }
+
+        if(uvs[blockIndex / 4].y == 0f)
+        {
+            uvs[blockIndex / 4].y = uvs[blockIndex / 4].y + artifactOffset;
+        }
+
+        if(uvs[blockIndex / 4].y == 0.1f)
+        {
+            uvs[blockIndex / 4].y = uvs[blockIndex / 4].y - artifactOffset;
+        }        
+
+
+        #endregion
+
+        } else {
+            #region verts
+            vertices[0 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[1 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[2 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[3 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+
+            vertices[4 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[5 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[6 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[7 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+
+            //Second (z)
+            vertices[8 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[9 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[10 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[11 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+
+            vertices[12 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[13 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[14 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[15 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+
+            //Third (x)
+            vertices[16 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[17 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[18 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[19 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+
+            vertices[20 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[21 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[22 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+            vertices[23 + (blockIndex * 24)] = new Vector3(0, 0, 0);
+        #endregion
+
+        #region tris
+
+            //Top faces (y+)
+            triangles[0 + (blockIndex * 36)] = 0;
+            triangles[1 + (blockIndex * 36)] = 0;
+            triangles[2 + (blockIndex * 36)] = 0;
+            triangles[3 + (blockIndex * 36)] = 0;
+            triangles[4 + (blockIndex * 36)] = 0;
+            triangles[5 + (blockIndex * 36)] = 0;
+
+            //Front faces (-z)
+            triangles[6 + (blockIndex * 36)] = 12 + (blockIndex * 24);
+            triangles[7 + (blockIndex * 36)] = 8 + (blockIndex * 24);
+            triangles[8 + (blockIndex * 36)] = 11 + (blockIndex * 24);
+            triangles[9 + (blockIndex * 36)] = 11 + (blockIndex * 24);
+            triangles[10 + (blockIndex * 36)] = 15 + (blockIndex * 24);
+            triangles[11 + (blockIndex * 36)] = 12 + (blockIndex * 24);
+
+            //Left faces (-x)
+            triangles[12 + (blockIndex * 36)] = 21 + (blockIndex * 24);
+            triangles[13 + (blockIndex * 36)] = 17 + (blockIndex * 24);
+            triangles[14 + (blockIndex * 36)] = 16 + (blockIndex * 24);
+            triangles[15 + (blockIndex * 36)] = 16 + (blockIndex * 24);
+            triangles[16 + (blockIndex * 36)] = 20 + (blockIndex * 24);
+            triangles[17 + (blockIndex * 36)] = 21 + (blockIndex * 24);
+
+            //Right faces (+x)
+            triangles[18 + (blockIndex * 36)] = 23 + (blockIndex * 24);
+            triangles[19 + (blockIndex * 36)] = 19 + (blockIndex * 24);
+            triangles[20 + (blockIndex * 36)] = 18 + (blockIndex * 24);
+            triangles[21 + (blockIndex * 36)] = 18 + (blockIndex * 24);
+            triangles[22 + (blockIndex * 36)] = 22 + (blockIndex * 24);
+            triangles[23 + (blockIndex * 36)] = 23 + (blockIndex * 24);
+
+            //Back faces (+z)
+            triangles[24 + (blockIndex * 36)] = 14 + (blockIndex * 24);
+            triangles[25 + (blockIndex * 36)] = 10 + (blockIndex * 24);
+            triangles[26 + (blockIndex * 36)] = 9 + (blockIndex * 24);
+            triangles[27 + (blockIndex * 36)] = 9 + (blockIndex * 24);
+            triangles[28 + (blockIndex * 36)] = 13 + (blockIndex * 24);
+            triangles[29 + (blockIndex * 36)] = 14 + (blockIndex * 24);
+
+            //Bottom faces (-y)
+            triangles[30 + (blockIndex * 36)] = 7 + (blockIndex * 24);
+            triangles[31 + (blockIndex * 36)] = 6 + (blockIndex * 24);
+            triangles[32 + (blockIndex * 36)] = 5 + (blockIndex * 24);
+            triangles[33 + (blockIndex * 36)] = 5 + (blockIndex * 24);
+            triangles[34 + (blockIndex * 36)] = 4 + (blockIndex * 24);
+            triangles[35 + (blockIndex * 36)] = 7 + (blockIndex * 24);
+
+        #endregion
+
+        }
+
+        _meshFilter.mesh.vertices = vertices;
+        _meshFilter.mesh.triangles = triangles;
+        _meshFilter.mesh.RecalculateNormals();
+        _meshFilter.mesh.RecalculateTangents();        
+
+    }
+
+    private void GenerateMesh()
+    {     
+        int blockCount = 0;
+        Vector3[] vertices = new Vector3[8 * 3 * chunkWidth * chunkWidth * chunkHeight];
+        int[] triangles = new int[36 * chunkWidth * chunkWidth * chunkHeight];
+        Vector2[] uvs = new Vector2[8 * 3 * chunkWidth * chunkWidth * chunkHeight];
+
         //Second pass, actual mesh generation
         for (int y = 0; y < chunkHeight; y++)
         {
@@ -178,46 +518,46 @@ public class TerrainGenerator : MonoBehaviour
                     * Assign vertices
                     * Assign triangles
                     */
-
-                    #region verts
-
-                    //First (y)
-                    vertices[0 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
-                    vertices[1 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
-                    vertices[2 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
-                    vertices[3 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
-
-                    vertices[4 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
-                    vertices[5 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
-                    vertices[6 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
-                    vertices[7 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
-
-                    //Second (z)
-                    vertices[8 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
-                    vertices[9 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
-                    vertices[10 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
-                    vertices[11 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
-
-                    vertices[12 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
-                    vertices[13 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
-                    vertices[14 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
-                    vertices[15 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
-
-                    //Third (x)
-                    vertices[16 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
-                    vertices[17 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
-                    vertices[18 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
-                    vertices[19 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
-
-                    vertices[20 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
-                    vertices[21 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
-                    vertices[22 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
-                    vertices[23 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
-
-                    #endregion
-
-                    if (voxelData[x, y, z] != 0)
+                    
+                    if(voxelData[x, y, z] != 0)
                     {
+
+                        #region verts
+
+                        //First (y)
+                        vertices[0 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
+                        vertices[1 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
+                        vertices[2 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
+                        vertices[3 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
+
+                        vertices[4 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
+                        vertices[5 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
+                        vertices[6 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
+                        vertices[7 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
+
+                        //Second (z)
+                        vertices[8 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
+                        vertices[9 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
+                        vertices[10 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
+                        vertices[11 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
+
+                        vertices[12 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
+                        vertices[13 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
+                        vertices[14 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
+                        vertices[15 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
+
+                        //Third (x)
+                        vertices[16 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 0 + z);
+                        vertices[17 + (blockCount * 24)] = new Vector3(0 + x, 0 + y, 1 + z);
+                        vertices[18 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 1 + z);
+                        vertices[19 + (blockCount * 24)] = new Vector3(1 + x, 0 + y, 0 + z);
+
+                        vertices[20 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 0 + z);
+                        vertices[21 + (blockCount * 24)] = new Vector3(0 + x, -1 + y, 1 + z);
+                        vertices[22 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 1 + z);
+                        vertices[23 + (blockCount * 24)] = new Vector3(1 + x, -1 + y, 0 + z);
+
+                        #endregion
 
                         //Top faces (y+)
                         if (y + 1 < chunkHeight)
@@ -400,7 +740,7 @@ public class TerrainGenerator : MonoBehaviour
 
                 }
             }
-        }    
+        }                
 
         //Scale the texture so that one subtexture fits exactly one side of a block,
         //set the appropriate texture according to the block id
@@ -414,7 +754,7 @@ public class TerrainGenerator : MonoBehaviour
         {   
             if(i % 24 == 0)
             {
-                int blockId = GetBlockId(point / 24);
+                byte blockId = GetBlockId(point / 24);
                 if(blockId > 0)
                 {
                     for(int j = point; j < point + 24; j++)
@@ -477,7 +817,7 @@ public class TerrainGenerator : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
 
-        _meshFilter.mesh = mesh;
+        _meshFilter.mesh = mesh;        
         this.gameObject.AddComponent<MeshCollider>();
 
     }

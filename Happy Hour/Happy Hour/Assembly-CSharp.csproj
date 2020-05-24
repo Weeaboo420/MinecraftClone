@@ -39,12 +39,14 @@
      <Compile Include="Assets\Scripts\DayNightCycle.cs" />
      <Compile Include="Assets\Scripts\FreeModeCamera.cs" />
      <Compile Include="Assets\Scripts\Manager.cs" />
+     <Compile Include="Assets\Scripts\PlayerCamera.cs" />
      <Compile Include="Assets\Scripts\PlayerData.cs" />
      <Compile Include="Assets\Scripts\SimpleGraphicsSettings.cs" />
      <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
      <Compile Include="Assets\Scripts\Utilities.cs" />
      <Compile Include="Assets\Scripts\VoxelData.cs" />
      <Compile Include="Assets\Scripts\WaterTile.cs" />
+     <Compile Include="Assets\Scripts\World.cs" />
     <Reference Include="UnityEngine">
         <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.13f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
@@ -591,20 +593,20 @@
     <Reference Include="Unity.CollabProxy.Editor">
         <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.Postprocessing.Editor">
+        <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/Unity.Postprocessing.Editor.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.Rider.Editor">
         <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Postprocessing.Runtime">
+        <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/Unity.Postprocessing.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
         <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.UI">
         <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Postprocessing.Editor">
-        <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/Unity.Postprocessing.Editor.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Postprocessing.Runtime">
-        <HintPath>X:/UnityHub/Projects/MinecraftClone/Happy Hour/Happy Hour/Library/ScriptAssemblies/Unity.Postprocessing.Runtime.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

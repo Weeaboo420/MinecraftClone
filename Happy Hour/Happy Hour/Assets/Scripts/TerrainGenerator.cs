@@ -128,7 +128,7 @@ public class TerrainGenerator : MonoBehaviour
                             //Highest position in chunk, aka grass
                             if(y == groundHeight)
                             {
-                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Grass).Id;
+                                voxelData[x, y, z] = VoxelData.GetVoxel(VoxelData.VoxelNames.Grass).Id;                                
                             }
 
                             else if(y <= groundHeight - 1 && y >= groundHeight - 3)
@@ -448,48 +448,7 @@ public class TerrainGenerator : MonoBehaviour
                 {
                     for(int j = currentBlock; j < currentBlock + 24; j++)
                     {
-
-                        if(uvs[j].x == 0.1f)
-                        {
-                            uvs[j].x = (block.Faces[blockFace] * 0.1f) - artifactOffset;                            
-
-                            if(uvs[j].x < 0f)
-                            {
-                                uvs[j].x = 0f;
-                            }
-
-                            if(uvs[j].x > 1f)
-                            {
-                                uvs[j].x = 1f;
-                            }                            
-
-                        }
-
-                        if(uvs[j].x == 0f)
-                        {
-                            uvs[j].x = (block.Faces[blockFace] * 0.1f) - 0.1f + artifactOffset;
-
-                            if(uvs[j].x < 0f)
-                            {
-                                uvs[j].x = 0f;
-                            }
-
-                            if(uvs[j].x > 1f)
-                            {
-                                uvs[j].x = 1f;
-                            }                            
-                        }
-
-                        if(uvs[j].y == 0f)
-                        {
-                        uvs[j].y = uvs[j].y + artifactOffset;
-                        }
-
-                        if(uvs[j].y == 0.1f)
-                        {
-                            uvs[j].y = uvs[j].y - artifactOffset;
-                        } 
-
+                        uvs[j] = Utilities.GetUvCoordinates(block, blockFace, uvs[j].x, uvs[j].y);
 
                         //Block face handling
                         if((j + 1) % 4 == 0 && blockFace < 5)

@@ -33,10 +33,39 @@ public class PlayerData : MonoBehaviour
 
         if(blockName == VoxelData.VoxelNames.Air)
         {
-            uiBlock.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", null);
-        } else {
-            uiBlock.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", Resources.Load<Texture2D>("GUI/atlas"));
-            uiBlock.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((selectedBlock * 0.1f - 0.1f) + VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));           
+            foreach(Transform child in uiBlock.transform)
+            {
+                if(child.transform.name != "Point Light")
+                {
+                    child.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", null);
+                }
+            }
+        } 
+        
+        else 
+        {
+            foreach(Transform child in uiBlock.transform)
+            {
+                if(child.transform.name != "Point Light")
+                {
+                    child.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", Resources.Load<Texture2D>("GUI/atlas"));
+
+                    if(child.transform.name == "TopFace")
+                    {
+                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((VoxelData.GetVoxel((byte)selectedBlock).Faces[0] * 0.1f - 0.1f) - VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));
+                    }
+
+                    if(child.transform.name == "FrontFace")
+                    {
+                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((VoxelData.GetVoxel((byte)selectedBlock).Faces[2] * 0.1f - 0.1f) - VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));
+                    }
+
+                    if(child.transform.name == "LeftFace")
+                    {
+                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((VoxelData.GetVoxel((byte)selectedBlock).Faces[4] * 0.1f - 0.1f) - VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));
+                    }
+                }
+            }            
         }
 
     }

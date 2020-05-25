@@ -52,6 +52,78 @@ public class Voxel
 
 }
 
+public static class Utilities 
+{
+    //uvs[j].x = (block.Faces[blockFace] * 0.1f) - artifactOffset;
+    //uvs[j].x = (block.Faces[blockFace] * 0.1f) - 0.1f + artifactOffset;
+
+    private static float GetRow(Voxel block, int face)
+    {
+        float rowValue = 0f;        
+
+        for(int cell = 1; cell < block.Faces[face] + 1; cell++)
+        {
+            if(cell % 11 == 0)
+            {                
+                rowValue += 0.1f;
+            }
+        }
+
+        return rowValue;        
+    }
+
+    public static Vector2 GetUvCoordinates(Voxel block, int face, float x, float y)
+    {
+        Vector2 coords = new Vector2(0, 0);
+
+        if(x == 0.1f)
+        {
+            coords.x = (block.Faces[face] * 0.1f) - VoxelData.ArtifactOffset - GetRow(block, face) * 10;
+        }
+
+        else if (x == 0f)
+        {
+            coords.x = (block.Faces[face] * 0.1f) - 0.1f + VoxelData.ArtifactOffset - GetRow(block, face) * 10;
+        }
+
+        if(y == 0.1f)
+        {
+            coords.y = y + GetRow(block, face) - VoxelData.ArtifactOffset; 
+        }
+
+        else if(y == 0f)
+        {
+            coords.y = y + GetRow(block, face) + VoxelData.ArtifactOffset;
+        }
+
+
+
+        //Clamping
+        if(coords.x < 0f)
+        {
+            coords.x = 0f;
+        }
+
+        if(coords.x > 1f)
+        {
+            coords.x = 1f;
+        }
+
+        if(coords.y < 0f)
+        {
+            coords.y = 0f;
+        }
+
+        if(coords.y > 1f)
+        {
+            coords.y = 1f;
+        }
+
+        return coords;
+    }
+
+}
+
 public static class VoxelData
 {
     public enum VoxelNames 
@@ -63,7 +135,9 @@ public static class VoxelData
         Glass = 4,
         Coal = 5,
         Cage = 6,
-        Kiwi = 7
+        Kiwi = 7,
+        Log = 8,
+        Planks = 9
     }
 
     public static float ArtifactOffset
@@ -80,6 +154,8 @@ public static class VoxelData
         //Currently there is a limitation in that the two faces on an axis must have
         //the same texture index, otherwise the texture doesn't apply correctly and it
         //just looks horrible
+
+        //Faces order = top, bottom, front, back, left, right
         new Voxel(VoxelNames.Air, false, 0, new int[] {0, 0, 0, 0, 0, 0}),
         new Voxel(VoxelNames.Dirt, true, 1, new int[] {1, 1, 1, 1, 1, 1}),
         new Voxel(VoxelNames.Grass, true, 2, new int[] {2, 1, 8, 8, 8, 8}),
@@ -87,7 +163,9 @@ public static class VoxelData
         new Voxel(VoxelNames.Glass, false, 4, new int[] {4, 4, 4, 4, 4, 4}),
         new Voxel(VoxelNames.Coal, true, 5, new int[] {5, 5, 5, 5, 5, 5}),
         new Voxel(VoxelNames.Cage, false, 6, new int[] {6, 6, 6, 6, 6, 6}),
-        new Voxel(VoxelNames.Kiwi, true, 7, new int[] {7, 7, 7, 7, 7, 7})
+        new Voxel(VoxelNames.Kiwi, true, 7, new int[] {7, 7, 7, 7, 7, 7}),
+        new Voxel(VoxelNames.Log, true, 8, new int[] {10, 10, 9, 9, 9, 9}),
+        new Voxel(VoxelNames.Planks, true, 9, new int[] {11, 11, 11, 11, 11, 11})
     };
 
     public static Voxel GetVoxel(VoxelNames name)

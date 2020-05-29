@@ -32,26 +32,17 @@ public class World : MonoBehaviour
 
     //Specifies how many chunks wide the world will be, this number is then squared since the width is
     //used in both the x- and z-directions
-    private int worldWidth = 8;
+    private int worldWidth = 2;
 
-    //Perlin noise settings and such
-    private float noiseScale = 100f;            
+    //Perlin noise settings and such          
     private int seed;
     private List<TerrainGenerator> chunks;
 
-    public float NoiseScale
+    public List<TerrainGenerator> Chunks
     {
         get
         {
-            return noiseScale;
-        }
-    }
-
-    public float NoiseWidth
-    {
-        get
-        {
-            return 10f;
+            return chunks;
         }
     }
 
@@ -65,10 +56,11 @@ public class World : MonoBehaviour
     {        
         GameObject chunk = new GameObject("Chunk at " + pos.ToString());
         chunk.transform.position = pos;
-        chunk.transform.rotation = Quaternion.Euler(0, 0, 0);
+        chunk.transform.rotation = Quaternion.Euler(0, 0, 0);        
         chunk.AddComponent<TerrainGenerator>();
-        chunk.GetComponent<MeshRenderer>().material = Resources.Load<Material>("Materials/Atlas");
         chunk.GetComponent<TerrainGenerator>().SetWorld(this);
+        chunk.GetComponent<TerrainGenerator>().SetData();
+        chunk.GetComponent<MeshRenderer>().material = Resources.Load<Material>("Materials/Atlas");        
         chunks.Add(chunk.GetComponent<TerrainGenerator>());
     }
 
@@ -79,13 +71,20 @@ public class World : MonoBehaviour
 
     private void GenerateWorld()
     {
+
         for(int x = 0; x < worldWidth; x++)
         {
             for(int z = 0; z < worldWidth; z++)
             {
                 CreateChunk(new Vector3(x * WorldSettings.ChunkWidth, 0, z * WorldSettings.ChunkWidth));
             }            
-        } 
+        }
+
+        foreach(TerrainGenerator chunk in chunks)
+        {
+            chunk.GenerateMesh();
+        }
+
     }
 
     public void RegenerateWorld()
@@ -94,9 +93,14 @@ public class World : MonoBehaviour
         CreateSeed();
         foreach(TerrainGenerator chunk in chunks)
         {            
-            chunk.SetData();
-            chunk.GenerateMesh();            
+            chunk.SetData();        
         }
+
+        foreach(TerrainGenerator chunk in chunks)
+        {            
+            chunk.GenerateMesh();
+        }
+        
     }
 
     void Start()

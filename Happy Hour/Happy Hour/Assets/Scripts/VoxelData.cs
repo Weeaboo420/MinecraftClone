@@ -137,7 +137,9 @@ public static class VoxelData
         Cage = 6,
         Kiwi = 7,
         Log = 8,
-        Planks = 9
+        Planks = 9,
+        Cobblestone = 10,
+        TestBlock = 11
     }
 
     public static float ArtifactOffset
@@ -165,7 +167,9 @@ public static class VoxelData
         new Voxel(VoxelNames.Cage, false, 6, new int[] {6, 6, 6, 6, 6, 6}),
         new Voxel(VoxelNames.Kiwi, true, 7, new int[] {7, 7, 7, 7, 7, 7}),
         new Voxel(VoxelNames.Log, true, 8, new int[] {10, 10, 9, 9, 9, 9}),
-        new Voxel(VoxelNames.Planks, true, 9, new int[] {11, 11, 11, 11, 11, 11})
+        new Voxel(VoxelNames.Planks, true, 9, new int[] {11, 11, 11, 11, 11, 11}),
+        new Voxel(VoxelNames.Cobblestone, true, 10, new int[] {12, 12, 12, 12, 12, 12}),
+        new Voxel(VoxelNames.TestBlock, false, 11, new int [] {13, 13, 13, 13, 13, 13})
     };
 
     public static Voxel GetVoxel(VoxelNames name)

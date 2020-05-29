@@ -114,8 +114,9 @@ public class TerrainGenerator : MonoBehaviour
                 {
                     for (int z = 0; z < chunkWidth; z++)
                     {
-                        
-                        int groundHeight = Mathf.RoundToInt(world.SampleNoise(transform.position.x * 0.02f + x / world.NoiseWidth * world.NoiseScale, transform.position.z * 0.02f + z / world.NoiseWidth * world.NoiseScale) * 10);
+
+                        //Get some actual noise value so that we can build some interesting-looking terrain                           
+                        int groundHeight = world.SampleNoise(x, z, transform.position);
 
                         if(y > groundHeight)
                         {
@@ -472,6 +473,7 @@ public class TerrainGenerator : MonoBehaviour
         
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
+        mesh.RecalculateBounds();
 
         _meshFilter.mesh = mesh;        
         this.gameObject.AddComponent<MeshCollider>();

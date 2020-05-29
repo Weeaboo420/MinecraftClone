@@ -32,11 +32,11 @@ public class World : MonoBehaviour
 
     //Specifies how many chunks wide the world will be, this number is then squared since the width is
     //used in both the x- and z-directions
-    private int worldWidth = 10;
+    private int worldWidth = 8;
 
     //Perlin noise settings and such
-    private float noiseScale = 2f;            
-    private float seed;
+    private float noiseScale = 100f;            
+    private int seed;
     private List<TerrainGenerator> chunks;
 
     public float NoiseScale
@@ -51,13 +51,14 @@ public class World : MonoBehaviour
     {
         get
         {
-            return 100f;
+            return 10f;
         }
     }
 
-    public float SampleNoise(float x, float y)
+    //This function is responsible for delivering height values for the terrain generator
+    public int SampleNoise(float x, float y, Vector3 chunkPosition)
     {
-        return Mathf.PerlinNoise(x * seed, y * seed);
+        return Mathf.FloorToInt(Mathf.PerlinNoise(0.1f * (x + chunkPosition.x), 0.1f * (y + (chunkPosition.z)) + seed) * WorldSettings.ChunkHeight);
     }
 
     private void CreateChunk(Vector3 pos)
@@ -73,8 +74,7 @@ public class World : MonoBehaviour
 
     public void CreateSeed()
     {
-        seed = Random.Range(1.1f, 15f);
-        seed = seed * Random.Range(0.12f, 0.39f);
+        seed = Random.Range(0, 256);
     }
 
     private void GenerateWorld()

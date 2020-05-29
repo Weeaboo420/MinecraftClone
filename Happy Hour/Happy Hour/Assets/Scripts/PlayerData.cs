@@ -11,6 +11,7 @@ public class PlayerData : MonoBehaviour
     private int selectedBlock = 0;
     private Text blockText;
     public GameObject uiBlock;
+    public float x, y;
 
     public int Block
     {
@@ -49,10 +50,11 @@ public class PlayerData : MonoBehaviour
                 if(child.transform.name != "Point Light")
                 {
                     child.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", Resources.Load<Texture2D>("GUI/atlas"));
+                    Voxel block = VoxelData.GetVoxel((byte)selectedBlock);
 
                     if(child.transform.name == "TopFace")
                     {
-                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((VoxelData.GetVoxel((byte)selectedBlock).Faces[0] * 0.1f - 0.1f) - VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));
+                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", Utilities.GetUvCoordinates(block, block.Faces[0], x, y));
                     }
 
                     if(child.transform.name == "FrontFace")
@@ -101,6 +103,18 @@ public class PlayerData : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Return))
         {
             GameObject.Find("World").GetComponent<World>().RegenerateWorld();
+        }
+
+        if(Input.GetKeyDown(KeyCode.R))
+        {
+            x += 0.1f;
+            SelectedBlockChanged();    
+        }
+
+        if(Input.GetKeyDown(KeyCode.T))
+        {
+            x -= 0.1f;
+            SelectedBlockChanged();    
         }
 
     }

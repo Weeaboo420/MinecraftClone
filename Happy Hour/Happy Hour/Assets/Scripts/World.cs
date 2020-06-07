@@ -6,7 +6,7 @@ using UnityEngine;
 //chunk width and height, possibly name in the future, and so on...
 public static class WorldSettings
 {
-    private static int _chunkWidth = 8, _chunkHeight = 10;
+    private static int _chunkWidth = 4, _chunkHeight = 12;
 
     public static int ChunkWidth
     {
@@ -32,7 +32,7 @@ public class World : MonoBehaviour
 
     //Specifies how many chunks wide the world will be, this number is then squared since the width is
     //used in both the x- and z-directions
-    private int worldWidth = 2;
+    private int worldWidth = 20;
 
     //Perlin noise settings and such          
     private int seed;
@@ -66,7 +66,7 @@ public class World : MonoBehaviour
 
     public void CreateSeed()
     {
-        seed = Random.Range(0, 256);
+        seed = UnityEngine.Random.Range(10000, 99000);
     }
 
     private void GenerateWorld()

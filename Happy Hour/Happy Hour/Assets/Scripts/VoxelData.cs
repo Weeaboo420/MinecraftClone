@@ -72,6 +72,27 @@ public static class Utilities
         return rowValue;        
     }
 
+    public static string FormatKey(Vector3 pos)
+    {
+        pos.x = Mathf.Clamp(pos.x, 0, WorldSettings.ChunkWidth-1);
+        pos.y = Mathf.Clamp(pos.y, 0, WorldSettings.ChunkHeight-1);
+        pos.z = Mathf.Clamp(pos.z, 0, WorldSettings.ChunkWidth-1);
+
+        return pos.x + "" + pos.y + "" + pos.z;
+    }
+
+    //Returns a chunk if it exists
+    public static TerrainGenerator FindChunk(Vector3 pos)
+    {
+        if(GameObject.Find("Chunk at " + pos.ToString()))
+        {
+            return GameObject.Find("Chunk at " + pos.ToString()).GetComponent<TerrainGenerator>();
+        }
+
+        return null;
+
+    }
+
     public static Vector2 GetUvCoordinates(Voxel block, int face, float x, float y)
     {
         Vector2 coords = new Vector2(0, 0);
@@ -139,7 +160,7 @@ public static class VoxelData
         Log = 8,
         Planks = 9,
         Cobblestone = 10,
-        TestBlock = 11
+        Sand = 11
     }
 
     public static float ArtifactOffset
@@ -169,7 +190,7 @@ public static class VoxelData
         new Voxel(VoxelNames.Log, true, 8, new int[] {10, 10, 9, 9, 9, 9}),
         new Voxel(VoxelNames.Planks, true, 9, new int[] {11, 11, 11, 11, 11, 11}),
         new Voxel(VoxelNames.Cobblestone, true, 10, new int[] {12, 12, 12, 12, 12, 12}),
-        new Voxel(VoxelNames.TestBlock, false, 11, new int [] {13, 13, 13, 13, 13, 13})
+        new Voxel(VoxelNames.Sand, true, 11, new int [] {13, 13, 13, 13, 13, 13})
     };
 
     public static Voxel GetVoxel(VoxelNames name)

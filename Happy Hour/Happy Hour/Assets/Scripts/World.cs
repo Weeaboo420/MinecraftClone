@@ -6,7 +6,7 @@ using UnityEngine;
 //chunk width and height, possibly name in the future, and so on...
 public static class WorldSettings
 {
-    private static int _chunkWidth = 4, _chunkHeight = 12;
+    private static int _chunkWidth = 8, _chunkHeight = 8;
 
     public static int ChunkWidth
     {
@@ -32,7 +32,7 @@ public class World : MonoBehaviour
 
     //Specifies how many chunks wide the world will be, this number is then squared since the width is
     //used in both the x- and z-directions
-    private int worldWidth = 20;
+    private int worldWidth = 6;
 
     //Perlin noise settings and such          
     private int seed;
@@ -43,6 +43,17 @@ public class World : MonoBehaviour
         get
         {
             return chunks;
+        }
+    }
+
+    void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Z))
+        {
+            foreach(TerrainGenerator chunk in chunks)
+            {
+                chunk.gameObject.GetComponent<ShowMeshBounds>().Draw = !chunk.gameObject.GetComponent<ShowMeshBounds>().Draw;
+            }
         }
     }
 
@@ -60,7 +71,8 @@ public class World : MonoBehaviour
         chunk.AddComponent<TerrainGenerator>();
         chunk.GetComponent<TerrainGenerator>().SetWorld(this);
         chunk.GetComponent<TerrainGenerator>().SetData();
-        chunk.GetComponent<MeshRenderer>().material = Resources.Load<Material>("Materials/Atlas");        
+        chunk.GetComponent<MeshRenderer>().material = Resources.Load<Material>("Materials/Atlas");
+        chunk.AddComponent<ShowMeshBounds>();
         chunks.Add(chunk.GetComponent<TerrainGenerator>());
     }
 

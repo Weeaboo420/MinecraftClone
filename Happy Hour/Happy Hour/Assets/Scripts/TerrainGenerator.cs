@@ -115,7 +115,7 @@ public class TerrainGenerator : MonoBehaviour
     //Allows for updating the triangles of a singular block, increasing
     //performance drastically by not having to loop through every block
     //in the chunk when updating just one block.
-    public void SetBlockMesh(int x, int y, int z, bool ignoreNeighbors = false)
+    public void SetBlockMesh(int x, int y, int z, bool ignoreNeighbors = false, bool draw = false, bool onlyOwnFaces = false)
     {
 
         int blockIndex = voxelData[Utilities.FormatKey(new Vector3(x, y, z))].Index;
@@ -137,7 +137,7 @@ public class TerrainGenerator : MonoBehaviour
 
 #region own faces
         //Top faces (y+)
-        if (CanDraw(x, y + 1, z, x, y, z, ignoreNeighbors))
+        if (CanDraw(x, y + 1, z, x, y, z, false, false, draw))
         {
             triangles[0 + (blockIndex * 36)] = 0 + (blockIndex * 24);
             triangles[1 + (blockIndex * 36)] = 1 + (blockIndex * 24);
@@ -157,7 +157,7 @@ public class TerrainGenerator : MonoBehaviour
         }
 
         //Update the block face below us as well
-        if(CanDraw(x, y, z, x, y - 1, z, ignoreNeighbors))
+        if(CanDraw(x, y, z, x, y - 1, z, false, false, draw) && !onlyOwnFaces)
         {
             triangles[0 + (blockIndex_below * 36)] = 0 + (blockIndex_below * 24);
             triangles[1 + (blockIndex_below * 36)] = 1 + (blockIndex_below * 24);
@@ -177,7 +177,7 @@ public class TerrainGenerator : MonoBehaviour
 
 
         //Front faces (-z)
-        if (CanDraw(x, y, z - 1, x, y, z, ignoreNeighbors))
+        if (CanDraw(x, y, z - 1, x, y, z, false, false, draw))
         {
             triangles[6 + (blockIndex * 36)] = 12 + (blockIndex * 24);
             triangles[7 + (blockIndex * 36)] = 8 + (blockIndex * 24);
@@ -198,7 +198,7 @@ public class TerrainGenerator : MonoBehaviour
         
         
         //Update the block face in front as well
-        if(CanDraw(x, y, z, x, y, z + 1, ignoreNeighbors))
+        if(CanDraw(x, y, z, x, y, z + 1, false, false, draw) && !onlyOwnFaces)
         {
             triangles[6 + (blockIndex_back * 36)] = 12 + (blockIndex_back * 24);
             triangles[7 + (blockIndex_back * 36)] = 8 + (blockIndex_back * 24);
@@ -216,7 +216,7 @@ public class TerrainGenerator : MonoBehaviour
         }
 
         //Left faces (-x)
-        if (CanDraw(x - 1, y, z, x, y, z, ignoreNeighbors))
+        if (CanDraw(x - 1, y, z, x, y, z, false, false, draw))
         {            
             triangles[12 + (blockIndex * 36)] = 21 + (blockIndex * 24);
             triangles[13 + (blockIndex * 36)] = 17 + (blockIndex * 24);
@@ -234,15 +234,15 @@ public class TerrainGenerator : MonoBehaviour
             triangles[17 + (blockIndex * 36)] = 0;
         }
 
-        if(CanDraw(x, y, z, x + 1, y, z, ignoreNeighbors))
-        {
+        if(CanDraw(x, y, z, x + 1, y, z, false, false, draw) && !onlyOwnFaces)
+        {            
             triangles[12 + (blockIndex_right * 36)] = 21 + (blockIndex_right * 24);
             triangles[13 + (blockIndex_right * 36)] = 17 + (blockIndex_right * 24);
             triangles[14 + (blockIndex_right * 36)] = 16 + (blockIndex_right * 24);
             triangles[15 + (blockIndex_right * 36)] = 16 + (blockIndex_right * 24);
             triangles[16 + (blockIndex_right * 36)] = 20 + (blockIndex_right * 24);
             triangles[17 + (blockIndex_right * 36)] = 21 + (blockIndex_right * 24);
-        } else {
+        } else {            
             triangles[12 + (blockIndex_right * 36)] = 0;
             triangles[13 + (blockIndex_right * 36)] = 0;
             triangles[14 + (blockIndex_right * 36)] = 0;
@@ -252,7 +252,7 @@ public class TerrainGenerator : MonoBehaviour
         }
 
         //Right faces (+x)
-        if (CanDraw(x + 1, y, z, x, y, z, ignoreNeighbors))
+        if (CanDraw(x + 1, y, z, x, y, z, false, false, draw))
         {
             triangles[18 + (blockIndex * 36)] = 23 + (blockIndex * 24);
             triangles[19 + (blockIndex * 36)] = 19 + (blockIndex * 24);
@@ -270,7 +270,7 @@ public class TerrainGenerator : MonoBehaviour
 
         }
 
-        if(CanDraw(x, y, z, x - 1, y, z, ignoreNeighbors))
+        if(CanDraw(x, y, z, x - 1, y, z, false, false, draw) && !onlyOwnFaces)
         {
             triangles[18 + (blockIndex_left * 36)] = 23 + (blockIndex_left * 24);
             triangles[19 + (blockIndex_left * 36)] = 19 + (blockIndex_left * 24);
@@ -288,7 +288,7 @@ public class TerrainGenerator : MonoBehaviour
         }
 
         //Back faces (+z)
-        if (CanDraw(x, y, z + 1, x, y, z, ignoreNeighbors))
+        if (CanDraw(x, y, z + 1, x, y, z, false, false, draw))
         {
             triangles[24 + (blockIndex * 36)] = 14 + (blockIndex * 24);
             triangles[25 + (blockIndex * 36)] = 10 + (blockIndex * 24);
@@ -306,7 +306,7 @@ public class TerrainGenerator : MonoBehaviour
 
         }
 
-        if(CanDraw(x, y, z, x, y, z - 1, ignoreNeighbors))
+        if(CanDraw(x, y, z, x, y, z - 1, false, false, draw) && !onlyOwnFaces)
         {
             triangles[24 + (blockIndex_front * 36)] = 14 + (blockIndex_front * 24);
             triangles[25 + (blockIndex_front * 36)] = 10 + (blockIndex_front * 24);
@@ -324,7 +324,7 @@ public class TerrainGenerator : MonoBehaviour
         }
         
         //Bottom faces (-y)
-        if (CanDraw(x, y - 1, z, x, y, z, ignoreNeighbors))
+        if (CanDraw(x, y - 1, z, x, y, z, false, false, draw))
         {
             triangles[30 + (blockIndex * 36)] = 7 + (blockIndex * 24);
             triangles[31 + (blockIndex * 36)] = 6 + (blockIndex * 24);
@@ -342,7 +342,7 @@ public class TerrainGenerator : MonoBehaviour
 
         }
 
-        if(CanDraw(x, y, z, x, y + 1, z, ignoreNeighbors))
+        if(CanDraw(x, y, z, x, y + 1, z, false, false, draw) && !onlyOwnFaces)
         {
             triangles[30 + (blockIndex_above * 36)] = 7 + (blockIndex_above * 24);
             triangles[31 + (blockIndex_above * 36)] = 6 + (blockIndex_above * 24);
@@ -423,43 +423,62 @@ public class TerrainGenerator : MonoBehaviour
 
     //Checks every neighboring chunk for an air block at a certain position,
     //localOffset represents where the neighboring chunk is in relation to
-    //this chunk
+    //this chunk. This function is semantically incorrect, we return true
+    //if we can draw a specified face even though we should be returning
+    //false since the function is called "BlockInNeighbor" and we are actually
+    //returning the opposite if there is a block there.
     private bool BlockInNeighbor(Vector3 pos, Vector3 localOffset)
     {        
 
         if(neighbors.Count > 0)
         {
             if(neighbors.Any(neighbor => neighbor.Position == localOffset))
-            {
+            {                
                 TerrainGenerator neighbor = neighbors.Find(n => n.Position == localOffset);
                 if(neighbor.Data != null)
                 {
-                    if(!VoxelData.GetVoxel(neighbor.Data[Utilities.FormatKey(pos)].Id).Opaque)
-                    {
-                        return true;                        
+                    //If the block in the neighbor is an air block, then we can draw
+                    if(neighbor.Data[Utilities.FormatKey(pos)].Id == 0)
+                    {                        
+                        return true;
                     }
                 } 
                 
+                //If, for some reason, the voxel data in the neighbor is null, then we
+                //just draw
                 else 
                 {
-                    return false;
+                    return true;
                 }
+
             } 
-            
-            else 
-            {                
-                return false;
+
+            //If there is not a suitable neighbor then we can just draw
+            else
+            {
+                return true;
             }
+            
+
         }
 
+        //If all else fails, then don't draw anything
         return false;
+
     }
 
     //Coordinates labeled with "1" refer to the block we're looking at,
     //the ones labeled with "2" refer to the current block that we're trying to
     //determine whether or not to draw a face for.
-    private bool CanDraw(int x1, int y1, int z1, int x2, int y2, int z2, bool ignoreNeighbors = false)
+
+    //Directions
+    //0 = -x, 1 = +x
+    //2 = -z, 3 = +z
+    //4 = -y, 5 = +y
+    //10 = none
+    private bool CanDraw(int x1, int y1, int z1, int x2, int y2, int z2, bool ignoreNeighbors = false, bool debug = false, bool draw = false)
     {
+
         if(x1 > -1 && x1 < chunkWidth && y1 > -1 && y1 < chunkHeight && z1 > -1 && z1 < chunkWidth)
         {
             if(!GetBlock(voxelData[Utilities.FormatKey( new Vector3(x2, y2, z2))].Id).Opaque && voxelData[Utilities.FormatKey( new Vector3(x1, y1, z1))].Id 
@@ -472,47 +491,35 @@ public class TerrainGenerator : MonoBehaviour
 
         //Check against neighboring chunks
         else 
-        {            
-            if(!ignoreNeighbors)
+        {                                        
+            //NEED TO ADD SUPPORT FOR VERTICAL CHUNKS
+
+            //Right faces
+            if(x1 == WorldSettings.ChunkWidth)
             {                
-                //NEED TO ADD SUPPORT FOR VERTICAL CHUNKS
-
-                //Right faces
-                if(x1 == WorldSettings.ChunkWidth)
-                {                
-                    return BlockInNeighbor(new Vector3(0, y2, z2), new Vector3(transform.position.x + WorldSettings.ChunkWidth, 0, transform.position.z));
-                }
-
-                //Left faces
-                if(x1 == -1)
-                {                
-                    return BlockInNeighbor(new Vector3(WorldSettings.ChunkWidth - 1, y2, z2), new Vector3(transform.position.x - WorldSettings.ChunkWidth, 0, transform.position.z));
-                }
-
-                //Front faces
-                if(z1 == -1)
-                {                
-                    return BlockInNeighbor(new Vector3(x2, y2, WorldSettings.ChunkWidth - 1), new Vector3(transform.position.x, 0, transform.position.z - WorldSettings.ChunkWidth));
-                }
-
-                //Back faces
-                if(z1 == WorldSettings.ChunkWidth)
-                {                
-                    return BlockInNeighbor(new Vector3(x2, y2, 0), new Vector3(transform.position.x, 0, transform.position.z + WorldSettings.ChunkWidth));
-                }
-
+                return BlockInNeighbor(new Vector3(0, y2, z2), new Vector3(transform.position.x + WorldSettings.ChunkWidth, 0, transform.position.z));
             }
 
-            //If using ignoreNeighbors is active, make sure that the block being updated isn't an air block
-            if(ignoreNeighbors && voxelData[Utilities.FormatKey(new Vector3(x2, y2, z2))].Id != 0)
-            {
-                return true;
+            //Left faces
+            if(x1 == -1)
+            {                
+                return BlockInNeighbor(new Vector3(WorldSettings.ChunkWidth - 1, y2, z2), new Vector3(transform.position.x - WorldSettings.ChunkWidth, 0, transform.position.z));
+            }
+
+            //Front faces
+            if(z1 == -1)
+            {                
+                return BlockInNeighbor(new Vector3(x2, y2, WorldSettings.ChunkWidth - 1), new Vector3(transform.position.x, 0, transform.position.z - WorldSettings.ChunkWidth));
+            }
+
+            //Back faces
+            if(z1 == WorldSettings.ChunkWidth)
+            {                
+                return BlockInNeighbor(new Vector3(x2, y2, 0), new Vector3(transform.position.x, 0, transform.position.z + WorldSettings.ChunkWidth));
             }
 
         }
-
-        
-
+                
         return false;
 
     }

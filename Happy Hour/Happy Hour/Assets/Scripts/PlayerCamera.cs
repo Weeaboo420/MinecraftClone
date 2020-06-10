@@ -25,6 +25,11 @@ public class PlayerCamera : MonoBehaviour
             canUseTriggers = true;
         }
 
+        /*if(Input.GetKeyDown(KeyCode.C))
+        {
+            Utilities.ClearConsole();
+        }*/
+
         if(Input.GetMouseButtonDown(0) && !freeModeCamera.UsingController || Input.GetAxis("RT") > 0 && freeModeCamera.UsingController && canUseTriggers)
         {
             canUseTriggers = false;
@@ -52,14 +57,14 @@ public class PlayerCamera : MonoBehaviour
                 chunkScript.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, (int)posInChunk.z);                
 
                 
-                //Update surrounding blocks
+                //Update surrounding chunks if applicable
 
-                if(posInChunk.x == WorldSettings.ChunkWidth-1)
+                /*if(posInChunk.x == WorldSettings.ChunkWidth-1)
                 {
                     TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x + WorldSettings.ChunkWidth, chunkScript.Position.y, chunkScript.Position.z));
                     if(adjacentChunk)
                     {                        
-                        adjacentChunk.SetBlockMesh(0, (int)posInChunk.y, (int)posInChunk.z, true);
+                        adjacentChunk.SetBlockMesh(0, (int)posInChunk.y, (int)posInChunk.z, true, true, true);
                     }
                 }
 
@@ -68,7 +73,7 @@ public class PlayerCamera : MonoBehaviour
                     TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x - WorldSettings.ChunkWidth, chunkScript.Position.y, chunkScript.Position.z));
                     if(adjacentChunk)
                     {                        
-                        adjacentChunk.SetBlockMesh(WorldSettings.ChunkWidth-1, (int)posInChunk.y, (int)posInChunk.z, true);
+                        adjacentChunk.SetBlockMesh(WorldSettings.ChunkWidth-1, (int)posInChunk.y, (int)posInChunk.z, true, true, true);
                     }
                 }
 
@@ -77,7 +82,7 @@ public class PlayerCamera : MonoBehaviour
                     TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x, chunkScript.Position.y, chunkScript.Position.z + WorldSettings.ChunkWidth));
                     if(adjacentChunk)
                     {                        
-                        adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, 0, true);
+                        adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, 0, true, true, true);
                     }
                 }
 
@@ -86,9 +91,9 @@ public class PlayerCamera : MonoBehaviour
                     TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x, chunkScript.Position.y, chunkScript.Position.z - WorldSettings.ChunkWidth));
                     if(adjacentChunk)
                     {                        
-                        adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, WorldSettings.ChunkWidth-1, true);
+                        adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, WorldSettings.ChunkWidth-1, true, true, true);
                     }
-                }
+                }*/
 
                 //chunkScript.SetBlockMesh((int)posInChunk.x + 1, (int)posInChunk.y, (int)posInChunk.z);
 

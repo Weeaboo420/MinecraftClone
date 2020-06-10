@@ -8,7 +8,8 @@ public class FreeModeCamera : MonoBehaviour
     private float moveSpeed = 5f;
     private float horizontalMouseSpeed = 1.2f, verticalMouseSpeed = 1.2f,  minFov = 60, maxFov = 100, fovIncrement = 2f;    
     private Camera _camera;
-    
+    private Camera _debugCamera;
+
     public GameObject sunLight;
 
 
@@ -20,6 +21,7 @@ public class FreeModeCamera : MonoBehaviour
     void Start()
     {
         _camera = GetComponent<Camera>();
+        _debugCamera = GameObject.Find("Debug Camera").GetComponent<Camera>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false; 
 
@@ -112,13 +114,16 @@ public class FreeModeCamera : MonoBehaviour
             //Scollwheel down, dpad down
             if (_camera.fieldOfView < maxFov)
             {
-                _camera.fieldOfView += fovIncrement;                
+                _camera.fieldOfView += fovIncrement;              
             }
 
             if(_camera.fieldOfView > maxFov)
             {
                 _camera.fieldOfView = maxFov;                
             }
+
+            _debugCamera.fieldOfView = _camera.fieldOfView;
+
         }
 
         if (Input.GetAxis("Mouse ScrollWheel") > 0 || Input.GetAxis("Dpad Y") > 0 && canPressDpad)
@@ -134,6 +139,9 @@ public class FreeModeCamera : MonoBehaviour
             {
                 _camera.fieldOfView = minFov;                
             }
+
+            _debugCamera.fieldOfView = _camera.fieldOfView;
+
         }
 
         //Handle camera rotation and clamping

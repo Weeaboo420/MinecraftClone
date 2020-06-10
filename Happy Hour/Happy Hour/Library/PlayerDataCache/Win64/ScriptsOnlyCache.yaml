@@ -71,8 +71,6 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 82
       Script: {instanceID: 0}
-    - Class: 89
-      Script: {instanceID: 0}
     - Class: 104
       Script: {instanceID: 0}
     - Class: 108
@@ -132,8 +130,6 @@ ScriptsOnlyBuild:
     - Class: 223
       Script: {instanceID: 0}
     - Class: 224
-      Script: {instanceID: 0}
-    - Class: 258
       Script: {instanceID: 0}
     Assets/Resources/Scenes/VerifyScreen.unity:
     - Class: 1
@@ -485,7 +481,7 @@ ScriptsOnlyBuild:
     className: ScrollRect
   - hash:
       serializedVersion: 2
-      Hash: b7899ae7bcc3cf1fa48abe9dfa1143da
+      Hash: 3aed9e3460d83f00c3c93c127131aa18
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: DayNightCycle

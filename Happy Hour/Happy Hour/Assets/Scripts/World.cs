@@ -32,7 +32,7 @@ public class World : MonoBehaviour
 
     //Specifies how many chunks wide the world will be, this number is then squared since the width is
     //used in both the x- and z-directions
-    private int worldWidth = 6;
+    private int worldWidth = 8;
 
     //Perlin noise settings and such          
     private int seed;
@@ -48,7 +48,7 @@ public class World : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Z))
+        if(Input.GetKeyDown(KeyCode.F3))
         {
             foreach(TerrainGenerator chunk in chunks)
             {
@@ -76,9 +76,11 @@ public class World : MonoBehaviour
         chunks.Add(chunk.GetComponent<TerrainGenerator>());
     }
 
-    public void CreateSeed()
+    private void CreateSeed()
     {
         seed = UnityEngine.Random.Range(10000, 99000);
+        //seed = 67635;
+        //Debug.Log("Seed: " + seed);
     }
 
     private void GenerateWorld()

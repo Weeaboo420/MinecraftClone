@@ -183,7 +183,7 @@ public class PlayerData : MonoBehaviour
 
         if(Input.GetKeyDown(KeyCode.Return))
         {
-            GameObject.Find("World").GetComponent<World>().RegenerateWorld();
+            GameObject.Find("World").GetComponent<World>().RegenerateWorld();            
         }
 
         if(Input.GetKeyDown(KeyCode.R))

@@ -6,7 +6,7 @@ using UnityEngine;
 public class FreeModeCamera : MonoBehaviour
 {
     private float moveSpeed = 5f;
-    private float horizontalMouseSpeed = 1.2f, verticalMouseSpeed = 1.2f,  minFov = 60, maxFov = 100, fovIncrement = 2f;    
+    private float horizontalMouseSpeed = 1.2f, verticalMouseSpeed = 1.2f,  minFov = 60, maxFov = 120, fovIncrement = 2f;    
     private Camera _camera;
     private Camera _debugCamera;
 

@@ -59,13 +59,13 @@ public static class Utilities
     //uvs[j].x = (block.Faces[blockFace] * 0.1f) - artifactOffset;
     //uvs[j].x = (block.Faces[blockFace] * 0.1f) - 0.1f + artifactOffset;
 
-    /*public static void ClearConsole()
+    public static void ClearConsole()
     {
-         var assembly = Assembly.GetAssembly(typeof(SceneView));
+         /*var assembly = Assembly.GetAssembly(typeof(SceneView));
          var type = assembly.GetType("UnityEditor.LogEntries");
          var method = type.GetMethod("Clear");
-         method.Invoke(new object(), null);
-    }*/
+         method.Invoke(new object(), null);*/
+    }
 
     private static float GetRow(Voxel block, int face)
     {
@@ -178,7 +178,6 @@ public static class VoxelData
         get
         {
             return 0.0005f;
-
         }
     }
 

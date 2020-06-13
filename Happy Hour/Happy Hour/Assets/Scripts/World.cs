@@ -32,7 +32,7 @@ public class World : MonoBehaviour
 
     //Specifies how many chunks wide the world will be, this number is then squared since the width is
     //used in both the x- and z-directions
-    private int worldWidth = 8;
+    private int worldWidth = 10;
 
     //Perlin noise settings and such          
     private int seed;

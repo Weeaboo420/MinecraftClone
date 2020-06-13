@@ -9,7 +9,7 @@ public class FreeModeCamera : MonoBehaviour
     private float horizontalMouseSpeed = 1.2f, verticalMouseSpeed = 1.2f,  minFov = 60, maxFov = 120, fovIncrement = 2f;    
     private Camera _camera;
     private Camera _debugCamera;
-
+    private Camera _cloudCamera;
     public GameObject sunLight;
 
 
@@ -24,6 +24,8 @@ public class FreeModeCamera : MonoBehaviour
         _debugCamera = GameObject.Find("Debug Camera").GetComponent<Camera>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false; 
+
+        _cloudCamera = GameObject.Find("Cloud Camera").GetComponent<Camera>();
 
         //Find the control explanations for both PC and Xbox, then hide 
         //the ones for Xbox since this is primarily a PC game
@@ -123,6 +125,7 @@ public class FreeModeCamera : MonoBehaviour
             }
 
             _debugCamera.fieldOfView = _camera.fieldOfView;
+            _cloudCamera.fieldOfView = _camera.fieldOfView;
 
         }
 
@@ -141,11 +144,13 @@ public class FreeModeCamera : MonoBehaviour
             }
 
             _debugCamera.fieldOfView = _camera.fieldOfView;
+            _cloudCamera.fieldOfView = _camera.fieldOfView;
 
         }
 
         //Handle camera rotation and clamping
         Vector3 myRot = transform.eulerAngles;
+        Vector3 cloudCameraRotation = _cloudCamera.transform.eulerAngles;
 
         if(!usingController)
         {
@@ -206,7 +211,8 @@ public class FreeModeCamera : MonoBehaviour
         }
 
         myRot.x = Mathf.Clamp(myRot.x, -89.9f, 89.9f);        
-        transform.rotation = Quaternion.Euler(myRot);        
+        transform.rotation = Quaternion.Euler(myRot);
+        _cloudCamera.transform.rotation = Quaternion.Euler(myRot);
 
         
 

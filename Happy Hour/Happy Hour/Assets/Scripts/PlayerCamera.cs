@@ -13,7 +13,7 @@ public class PlayerCamera : MonoBehaviour
 
     void Start()
     {
-        cam = GetComponent<Camera>();
+        cam = GetComponent<Camera>();        
         freeModeCamera = GetComponent<FreeModeCamera>();
         playerData = GameObject.Find("PlayerData").GetComponent<PlayerData>();
     }

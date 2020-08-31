@@ -424,6 +424,7 @@ public class TerrainGenerator : MonoBehaviour
         return block;
     }
 
+    //Get the properties of a given block based on its ID
     private Voxel GetBlock(byte id)
     {
         return VoxelData.GetVoxel(id);
@@ -447,64 +448,24 @@ public class TerrainGenerator : MonoBehaviour
 
     }
 
-    //Checks every neighboring chunk for an air block at a certain position,
-    //localOffset represents where the neighboring chunk is in relation to
-    //this chunk. This function is semantically incorrect, we return true
-    //if we can draw a specified face even though we should be returning
-    //false since the function is called "BlockInNeighbor" and we are actually
-    //returning the opposite if there is a block there.
-    //posForBlock is the position of the block we're trying to determine visibility for
-    private bool BlockInNeighbor(Vector3 pos, Vector3 localOffset, Vector3 posForBlock, bool debug = false)
+    //Return the ID of a block in a neighboring chunk
+    private int BlockInNeighbor(Vector3 blockPos, Vector3 neighborPos)
     {        
 
         if(neighbors.Count > 0)
         {
-            /*if(debug)
+
+            if(neighbors.Any(neighbor => neighbor.Position == neighborPos))
             {
-                Debug.Log("Pos: " + pos + ", offset: " + localOffset + ", chunk: " + transform.position + ", posForBlock: " + posForBlock);
-            }*/
-
-            if(neighbors.Any(neighbor => neighbor.Position == localOffset))
-            {
-
-                if(debug)
+                TerrainGenerator neighbor = neighbors.Find(n => n.Position == neighborPos);
+                if(neighbor.Data != null && neighbor != this)
                 {
-                    Debug.Log("neighbor found");
-                }
-
-                TerrainGenerator neighbor = neighbors.Find(n => n.Position == localOffset);
-                if(neighbor.Data != null)
-                {
-                    //If the block in the neighbor is an air block, then we can draw
-                    if(neighbor.Data[Utilities.FormatKey(pos)].Id == 0)
-                    {
-                        if(debug)
-                        {
-                            Debug.Log("case 2");
-                        }                
-                                     
-                        return true;
-                    }
+                    return neighbor.Data[Utilities.FormatKey(blockPos)].Id;
                 } 
             }
         }
-        
-        else if(posForBlock.x == 0 || posForBlock.x == WorldSettings.ChunkWidth-1 || posForBlock.z == 0 || posForBlock.z == WorldSettings.ChunkWidth-1)
-        {
-            if(Utilities.FindChunk(transform.position + new Vector3(WorldSettings.ChunkWidth, 0, 0)) == null && Utilities.FindChunk(transform.position + new Vector3(0, 0, WorldSettings.ChunkWidth)) == null && Utilities.FindChunk(transform.position - new Vector3(WorldSettings.ChunkWidth, 0, 0)) == null && Utilities.FindChunk(transform.position - new Vector3(0, 0, WorldSettings.ChunkWidth)) == null)
-            {
-                return true;
-            } else {
-                return false;
-            }              
-        }
 
-        if(debug)
-        {
-            Debug.Log("case 5");
-        }                
-        //If all else fails, then just draw it
-        return true;
+        return 0; //If there are no neighbors we can just assume that there is nothing but air surrounding the chunk.
 
     }
 
@@ -514,125 +475,95 @@ public class TerrainGenerator : MonoBehaviour
     private bool CanDraw(int x1, int y1, int z1, int x2, int y2, int z2, bool debug = false)
     {
 
-        
 
-        //Bug fix
-        z2 = Mathf.Clamp(z2, 0, WorldSettings.ChunkWidth-1);
+        //Make sure that the block we're looking at is inside the bounds of the chunk
+        x2 = Mathf.Clamp(x2, 0, WorldSettings.ChunkWidth - 1);
+        y2 = Mathf.Clamp(y2, 0, WorldSettings.ChunkHeight - 1);
+        z2 = Mathf.Clamp(z2, 0, WorldSettings.ChunkWidth - 1);
+        x1 = Mathf.Clamp(x1, -1, WorldSettings.ChunkWidth);
+        y1 = Mathf.Clamp(y1, -1, WorldSettings.ChunkHeight);
         z1 = Mathf.Clamp(z1, -1, WorldSettings.ChunkWidth);
 
-        x2 = Mathf.Clamp(x2, 0, WorldSettings.ChunkWidth-1);
-        z1 = Mathf.Clamp(z1, -1, WorldSettings.ChunkWidth);
-
-
-        if(debug)
+        if (voxelData[Utilities.FormatKey(new Vector3(x2, y2, z2))].Id != 0)
         {
-            Debug.Log("v2: " + new Vector3(x2, y2, z2) + ", v1" + new Vector3(x1, y1, z1));
-        }
 
-        /*if(debug)
-        {
-            Debug.Log("looking at block: " + new Vector3(x1, y1, z1) + ", current block: " + new Vector3(x2, y2, z2) + ", my chunk: " + transform.position);
-        }*/
-
-        if(voxelData[Utilities.FormatKey(new Vector3(x2, y2, z2))].Id != 0)
-        {
-            
-            if(x1 >= 0 && x1 < chunkWidth && y1 >= 0 && y1 < chunkHeight && z1 >= 0 && z1 < chunkWidth)
+            if (x1 >= 0 && x1 < chunkWidth && y1 >= 0 && y1 < chunkHeight && z1 >= 0 && z1 < chunkWidth)
             {
-                
-                if(debug)
-                {
-                    Debug.Log("begin case 1");
-                }
+                int otherBlockId = voxelData[Utilities.FormatKey(new Vector3(x1, y1, z1))].Id; //The id of the other block
 
-                if(!GetBlock(voxelData[Utilities.FormatKey(new Vector3(x2, y2, z2))].Id).Opaque && voxelData[Utilities.FormatKey(new Vector3(x1, y1, z1))].Id 
-                != voxelData[Utilities.FormatKey(new Vector3(x2, y2, z2))].Id && !GetBlock(voxelData[Utilities.FormatKey(new Vector3(x1, y1, z1))].Id).Opaque || 
-                !GetBlock(voxelData[Utilities.FormatKey(new Vector3(x1, y1, z1))].Id).Opaque && GetBlock(voxelData[Utilities.FormatKey(new Vector3(x2, y2, z2))].Id).Opaque)
+                if (!GetBlock((byte)otherBlockId).Opaque)
                 {
-                    if(debug)
-                    {
-                        Debug.Log("case 1");
-                    }                
                     return true;
+                } else
+                {
+                    return false;
                 }
             }
 
-            //Check against neighboring chunks
-                if(debug)
-                {
-                    Debug.Log("Checking neighbors");
-                }                            
+            else
+            {
                 //NEED TO ADD SUPPORT FOR VERTICAL CHUNKS
 
                 //Right faces
-                if(x1 == WorldSettings.ChunkWidth)
+                if (x1 == WorldSettings.ChunkWidth)
                 {
-                    if(debug)
+                    int otherBlockId = BlockInNeighbor(new Vector3(0, y1, z1), (transform.position + new Vector3(WorldSettings.ChunkWidth, 0, 0)));
+                    if (!VoxelData.GetVoxel((byte)otherBlockId).Opaque)
                     {
-                        Debug.Log("Right faces");
-                    }                                
-                    return BlockInNeighbor(new Vector3(0, y2, z2), new Vector3(transform.position.x + WorldSettings.ChunkWidth, 0, transform.position.z), new Vector3(x2, y2, z2), debug);
+                        return true;
+                    } else
+                    {
+                        return false;
+                    }
                 }
 
                 //Left faces
-                else if(x1 == -1)
+                else if (x1 == -1)
                 {
-                    if(debug)
+                    int otherBlockId = BlockInNeighbor(new Vector3(WorldSettings.ChunkWidth - 1, y1, z1), (transform.position + new Vector3(-WorldSettings.ChunkWidth, 0, 0)));
+                    if (!VoxelData.GetVoxel((byte)otherBlockId).Opaque)
                     {
-                        Debug.Log("Left faces");
-                    }                
-                    return BlockInNeighbor(new Vector3(WorldSettings.ChunkWidth - 1, y2, z2), new Vector3(transform.position.x - WorldSettings.ChunkWidth, 0, transform.position.z), new Vector3(x2, y2, z2), debug);
+                        return true;
+                    } else
+                    {
+                        return false;
+                    }
                 }
 
                 //Front faces
-                else if(z1 == -1)
+                else if (z1 == -1)
                 {
-                    if(debug)
+                    int otherBlockId = BlockInNeighbor(new Vector3(x1, y1, WorldSettings.ChunkWidth - 1), (transform.position + new Vector3(0, 0, -WorldSettings.ChunkWidth)));
+                    if (!VoxelData.GetVoxel((byte)otherBlockId).Opaque)
                     {
-                        Debug.Log("Front faces");
-                    }                
-                    return BlockInNeighbor(new Vector3(x2, y2, WorldSettings.ChunkWidth - 1), new Vector3(transform.position.x, 0, transform.position.z - WorldSettings.ChunkWidth), new Vector3(x2, y2, z2), debug);
+                        return true;
+                    } else
+                    {
+                        return false;
+                    }
                 }
 
                 //Back faces
-                else if(z1 == WorldSettings.ChunkWidth)
+                else if (z1 == WorldSettings.ChunkWidth)
                 {
-                    if(debug)
+                    int otherBlockId = BlockInNeighbor(new Vector3(x1, y1, 0), (transform.position + new Vector3(0, 0, WorldSettings.ChunkWidth)));
+                    if (!VoxelData.GetVoxel((byte)otherBlockId).Opaque)
                     {
-                        Debug.Log("Back faces");
-                    }                
-                    return BlockInNeighbor(new Vector3(x2, y2, 0), new Vector3(transform.position.x, 0, transform.position.z + WorldSettings.ChunkWidth), new Vector3(x2, y2, z2), debug);
+                        return true;
+                    } else
+                    {
+                        return false;
+                    }
                 }
+            }
 
-                //Top faces, top of chunk
-                /*if(y2 == WorldSettings.ChunkHeight-1)
-                {
-                    if(debug)
-                    {
-                        Debug.Log("Top faces, top of chunk");
-                    }                
-                    return BlockInNeighbor(new Vector3(x2, 0, z2), new Vector3(transform.position.x, transform.position.y + WorldSettings.ChunkHeight, transform.position.z), new Vector3(x2, y2, z2), debug);
-                }
+            return true;
 
-                //Top faces, bottom of chunk
-                else if(y2 == 0)
-                {
-                    if(debug)
-                    {
-                        Debug.Log("Top faces, bottom of chunk");
-                    }                
-                    return BlockInNeighbor(new Vector3(x2, 1, z2), new Vector3(transform.position.x, transform.position.y + WorldSettings.ChunkHeight, transform.position.z), new Vector3(x2, 0, z2), debug);
-                }*/
-
-        }
-
-        if(debug)
+        } else
         {
-            Debug.Log("case 6");
-        }
-
-        //If the current block is an air block then we don't draw it
-        return false;
+            //If the current block is an air block then we don't draw it
+            return false;
+        }        
 
     }
 

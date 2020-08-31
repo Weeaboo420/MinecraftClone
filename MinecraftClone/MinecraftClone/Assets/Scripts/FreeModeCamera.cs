@@ -7,9 +7,7 @@ public class FreeModeCamera : MonoBehaviour
 {
     private float moveSpeed = 5f;
     private float horizontalMouseSpeed = 1.2f, verticalMouseSpeed = 1.2f,  minFov = 60, maxFov = 120, fovIncrement = 2f;    
-    private Camera _camera;
-    private Camera _debugCamera;
-    private Camera _cloudCamera;
+    private Camera _camera, _debugCamera, _cloudCamera, _uiCamera;    
     public GameObject sunLight;
 
 
@@ -20,11 +18,12 @@ public class FreeModeCamera : MonoBehaviour
 
     void Start()
     {
-        _camera = GetComponent<Camera>();
-        _debugCamera = GameObject.Find("Debug Camera").GetComponent<Camera>();
+        _camera = GetComponent<Camera>();        
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false; 
+        Cursor.visible = false;
 
+        _debugCamera = GameObject.Find("Debug Camera").GetComponent<Camera>();
+        _uiCamera = GameObject.Find("UI Camera").GetComponent<Camera>();
         _cloudCamera = GameObject.Find("Cloud Camera").GetComponent<Camera>();
 
         //Find the control explanations for both PC and Xbox, then hide 
@@ -126,6 +125,7 @@ public class FreeModeCamera : MonoBehaviour
 
             _debugCamera.fieldOfView = _camera.fieldOfView;
             _cloudCamera.fieldOfView = _camera.fieldOfView;
+            _uiCamera.fieldOfView = _camera.fieldOfView;
 
         }
 

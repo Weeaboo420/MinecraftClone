@@ -14,8 +14,19 @@ public class SimpleGraphicsSettings : MonoBehaviour
     private GameObject uiCamera;
 
     void Start()
-    {        
-        Application.targetFrameRate = 200;
+    {
+
+        //If we are playing inside the editor we limit the fps to 60 since vsync doesn't work in the editor.
+        switch(Application.isEditor)
+        {
+            case true:
+                Application.targetFrameRate = 60;
+                break;
+            case false:
+                Application.targetFrameRate = 200;
+                break;
+        }
+        
         fpsCounter = GameObject.Find("fpsCounter").GetComponent<Text>();
         ui = GameObject.Find("Canvas");
         uiCamera = GameObject.Find("UI Camera");

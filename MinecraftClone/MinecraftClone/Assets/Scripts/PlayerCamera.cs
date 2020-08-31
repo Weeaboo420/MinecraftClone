@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -9,28 +10,115 @@ public class PlayerCamera : MonoBehaviour
     private Camera cam;
     private PlayerData playerData;
     private FreeModeCamera freeModeCamera;
-    private bool canUseTriggers = true;
-    private bool debug = false;
+    private bool canUseTriggers = true, debug = false, cursorIsColliding = false;    
     private Mesh doubleSidedPlane;
+    private Transform blockCursor;
+    private MeshRenderer blockCursorRenderer;
+    private float maxPlayerReach = 7f; //This defines how far the player can reach in blocks
+
     void Start()
     {
         cam = GetComponent<Camera>();        
         freeModeCamera = GetComponent<FreeModeCamera>();
         playerData = GameObject.Find("PlayerData").GetComponent<PlayerData>();
         doubleSidedPlane = Resources.Load<Mesh>("Models/DoubleSidedPlane");
+        
+        blockCursor = GameObject.Find("SelectedBlock").transform;        
+        blockCursorRenderer = blockCursor.transform.Find("SelectedBlock_Mesh").GetComponent<MeshRenderer>();
+        blockCursor.transform.Find("SelectedBlock_Mesh").GetComponent<BlockCursorTrigger>().SetParent(this);
+    }
+
+    public bool CursorIsColliding
+    {
+        get
+        {
+            return cursorIsColliding;
+        }
+
+        set 
+        {
+            cursorIsColliding = value;
+            Debug.Log(value);
+        }
+    }
+    
+    //Confine a vector3 to a grid space, clamping it so that it can only progress in increments of 1.
+    private Vector3 ConfineToGrid(Vector3 hitPos, Vector3 chunkPos, Vector3 hitNormal)
+    {
+        Vector3 newPos = hitPos;
+
+        if (hitNormal.x <= -1 && hitNormal.x < 0)
+        {
+            newPos.x = Mathf.FloorToInt(newPos.x);
+        } else
+        {
+            newPos.x = Mathf.CeilToInt(newPos.x - 1);
+        }
+        
+        if(hitNormal.y <= -1 && hitNormal.y < 0)
+        {
+            newPos.y = Mathf.FloorToInt(newPos.y + 1);
+        } else
+        {
+            newPos.y = Mathf.CeilToInt(newPos.y);
+        }
+
+
+        if (hitNormal.z <= -1 && hitNormal.z < 0)
+        {
+            newPos.z = Mathf.FloorToInt(newPos.z);
+        }
+        else
+        {
+            newPos.z = Mathf.CeilToInt(newPos.z - 1);
+        }
+
+        /*newPos.x = Mathf.Clamp(newPos.x, 0, WorldSettings.ChunkWidth - 1);
+        newPos.y = Mathf.Clamp(newPos.y, 0, WorldSettings.ChunkHeight - 1);
+        newPos.z = Mathf.Clamp(newPos.z, 0, WorldSettings.ChunkWidth - 1);*/
+
+        return newPos;
     }
 
     void Update()
     {
 
-        if(Input.GetAxis("RT") == 0)
+        Ray cursorRay = cam.ScreenPointToRay(Input.mousePosition);
+        RaycastHit cursorHit;
+        if(Physics.Raycast(cursorRay, out cursorHit, maxPlayerReach))
         {
-            canUseTriggers = true;
+            if (cursorHit.transform.gameObject.CompareTag("Chunk"))
+            {
+                if(!blockCursorRenderer.enabled)
+                {
+                    blockCursorRenderer.enabled = true;
+                }
+
+                Vector3 cursorPos = blockCursor.position;
+                cursorPos = ConfineToGrid(cursorHit.point, cursorHit.transform.gameObject.transform.position, cursorHit.normal);
+                blockCursor.position = Vector3.Lerp(blockCursor.transform.position, cursorPos, Time.deltaTime * 45f);
+
+            } else
+            {
+                if (blockCursorRenderer.enabled)
+                {
+                    blockCursorRenderer.enabled = false;
+                }
+            }
+        } else
+        {
+            if(blockCursorRenderer.enabled)
+            {
+                blockCursorRenderer.enabled = false;
+            }
         }
 
-        if(Input.GetKeyDown(KeyCode.T))
+        
+
+
+        if (Input.GetAxis("RT") == 0)
         {
-            debug = !debug;
+            canUseTriggers = true;
         }
 
         if(Input.GetKeyDown(KeyCode.C))
@@ -45,7 +133,7 @@ public class PlayerCamera : MonoBehaviour
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            if(Physics.Raycast(ray, out hit, 5f))
+            if(Physics.Raycast(ray, out hit, maxPlayerReach))
             {
                 //Make sure that we're right clicking on a chunk
                 if(hit.transform.gameObject.tag == "Chunk")
@@ -74,11 +162,10 @@ public class PlayerCamera : MonoBehaviour
         if(Input.GetMouseButtonDown(0) && !freeModeCamera.UsingController || Input.GetAxis("RT") > 0 && freeModeCamera.UsingController && canUseTriggers)
         {
             canUseTriggers = false;
-            float distance = 80f;
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            if(Physics.Raycast(ray, out hit, distance))
+            if(Physics.Raycast(ray, out hit, maxPlayerReach))
             {
 
                 //Grab a reference to the chunk that was clicked,
@@ -90,77 +177,78 @@ public class PlayerCamera : MonoBehaviour
                 if(obj.transform.tag == "Destructible")
                 {
                     Destroy(obj);
+                    return;
                 }
 
                 if(obj.TryGetComponent(out TerrainGenerator temp))
                 {
-                    Vector3 posInChunk = hit.point - obj.transform.position + new Vector3(0, 0.7f, 0);
+                    Vector3 posInChunk = ConfineToGrid(hit.point, obj.transform.position, hit.normal) - obj.transform.position;                                                                            
 
-                    posInChunk.x = Mathf.FloorToInt(posInChunk.x);
-                    posInChunk.y = Mathf.FloorToInt(posInChunk.y);
-                    posInChunk.z = Mathf.FloorToInt(posInChunk.z);                
                     //Modify the block id
                     TerrainGenerator chunkScript = obj.GetComponent<TerrainGenerator>();
-                    chunkScript.SetBlock((int) posInChunk.x, (int) posInChunk.y, (int) posInChunk.z, (VoxelData.VoxelNames)playerData.Block);                
-
-                    //Get all neigbors before updating the mesh, this is crucial, otherwise the CanDraw function
-                    //won't work properly
-                    chunkScript.RetrieveNeighbors();
-
-                    //Update the mesh, only modifying the triangles of the block
-                    chunkScript.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, (int)posInChunk.z);                
-
-                    //Once we're done with the neighboring chunks we can remove them altogether
-                    chunkScript.ClearNeighbors();                
-
-                    //Update surrounding chunks if applicable
-                    if(posInChunk.x == WorldSettings.ChunkWidth-1)
+                    if(chunkScript.Data[Utilities.FormatKey(posInChunk)].Id != 0) //Make sure we didn't click on an air block
                     {
-                        TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x + WorldSettings.ChunkWidth, chunkScript.Position.y, chunkScript.Position.z));
-                        if(adjacentChunk)
-                        {   
-                            //We could use GenerateMesh() here but it causes ugly hitching. SetBlocKMesh() is bugged here for some reason
-                            //adjacentChunk.SetBlock(0, (int)posInChunk.y, (int)posInChunk.z, VoxelData.GetVoxel(adjacentChunk.Data[Utilities.FormatKey(new Vector3(0, (int)posInChunk.y, (int)posInChunk.z))].Id).Name);
-                            adjacentChunk.RetrieveNeighbors();
-                            adjacentChunk.SetBlockMesh(-1, (int)posInChunk.y, (int)posInChunk.z, debug);
-                            adjacentChunk.ClearNeighbors();
-                        }
-                    }
+                        chunkScript.SetBlock((int)posInChunk.x, (int)posInChunk.y, (int)posInChunk.z, (VoxelData.VoxelNames)playerData.Block);
 
-                    if(posInChunk.x == 0)
-                    {
-                        TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x - WorldSettings.ChunkWidth, chunkScript.Position.y, chunkScript.Position.z));
-                        if(adjacentChunk)
+                        //Get all neigbors before updating the mesh. This is crucial, otherwise the CanDraw function
+                        //won't work properly
+                        chunkScript.RetrieveNeighbors();
+
+                        //Update the mesh, only modifying the triangles of the block
+                        chunkScript.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, (int)posInChunk.z);
+
+                        //Once we're done with the neighboring chunks we can remove them altogether
+                        chunkScript.ClearNeighbors();
+
+                        //Update surrounding chunks if applicable
+                        if (posInChunk.x == WorldSettings.ChunkWidth - 1)
                         {
-                            adjacentChunk.RetrieveNeighbors();
-                            adjacentChunk.SetBlockMesh(WorldSettings.ChunkWidth, (int)posInChunk.y, (int)posInChunk.z, debug);
-                            adjacentChunk.ClearNeighbors();
+                            TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x + WorldSettings.ChunkWidth, chunkScript.Position.y, chunkScript.Position.z));
+                            if (adjacentChunk)
+                            {
+                                //We could use GenerateMesh() here but it causes ugly hitching. SetBlocKMesh() is bugged here for some reason
+                                //adjacentChunk.SetBlock(0, (int)posInChunk.y, (int)posInChunk.z, VoxelData.GetVoxel(adjacentChunk.Data[Utilities.FormatKey(new Vector3(0, (int)posInChunk.y, (int)posInChunk.z))].Id).Name);
+                                adjacentChunk.RetrieveNeighbors();
+                                adjacentChunk.SetBlockMesh(-1, (int)posInChunk.y, (int)posInChunk.z, debug);
+                                adjacentChunk.ClearNeighbors();
+                            }
                         }
-                    }
 
-                    if(posInChunk.z == WorldSettings.ChunkWidth-1)
-                    {
-                        TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x, chunkScript.Position.y, chunkScript.Position.z + WorldSettings.ChunkWidth));
-                        if(adjacentChunk)
-                        {                        
-                            adjacentChunk.RetrieveNeighbors();                        
-                            adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, -1, debug);
-                            adjacentChunk.ClearNeighbors();
+                        if (posInChunk.x == 0)
+                        {
+                            TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x - WorldSettings.ChunkWidth, chunkScript.Position.y, chunkScript.Position.z));
+                            if (adjacentChunk)
+                            {
+                                adjacentChunk.RetrieveNeighbors();
+                                adjacentChunk.SetBlockMesh(WorldSettings.ChunkWidth, (int)posInChunk.y, (int)posInChunk.z, debug);
+                                adjacentChunk.ClearNeighbors();
+                            }
                         }
-                    }
 
-                    if(posInChunk.z == 0)
-                    {
-                        TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x, chunkScript.Position.y, chunkScript.Position.z - WorldSettings.ChunkWidth));
-                        if(adjacentChunk)
-                        {                       
-                            adjacentChunk.RetrieveNeighbors();
-                            adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, WorldSettings.ChunkWidth, debug);
-                            adjacentChunk.ClearNeighbors();
+                        if (posInChunk.z == WorldSettings.ChunkWidth - 1)
+                        {
+                            TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x, chunkScript.Position.y, chunkScript.Position.z + WorldSettings.ChunkWidth));
+                            if (adjacentChunk)
+                            {
+                                adjacentChunk.RetrieveNeighbors();
+                                adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, -1, debug);
+                                adjacentChunk.ClearNeighbors();
+                            }
                         }
-                    }
 
-                    //chunkScript.SetBlockMesh((int)posInChunk.x + 1, (int)posInChunk.y, (int)posInChunk.z);
+                        if (posInChunk.z == 0)
+                        {
+                            TerrainGenerator adjacentChunk = Utilities.FindChunk(new Vector3(chunkScript.Position.x, chunkScript.Position.y, chunkScript.Position.z - WorldSettings.ChunkWidth));
+                            if (adjacentChunk)
+                            {
+                                adjacentChunk.RetrieveNeighbors();
+                                adjacentChunk.SetBlockMesh((int)posInChunk.x, (int)posInChunk.y, WorldSettings.ChunkWidth, debug);
+                                adjacentChunk.ClearNeighbors();
+                            }
+                        }
+
+                        //chunkScript.SetBlockMesh((int)posInChunk.x + 1, (int)posInChunk.y, (int)posInChunk.z);
+                    }
                 }
 
             }

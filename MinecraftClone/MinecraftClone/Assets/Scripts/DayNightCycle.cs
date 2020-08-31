@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class DayNightCycle : MonoBehaviour
 {
-    public float rotationSpeed = 1f, colorLerpSpeed = 2f;
+    public float rotationSpeed = 2f, colorLerpSpeed = 2f;
     public bool night;
     public Material sunMaterial;
     public Material moonMaterial;
@@ -85,6 +85,6 @@ public class DayNightCycle : MonoBehaviour
             night = true;
         }       
 
-        transform.RotateAround(transform.position, Vector3.right, 1f * Time.deltaTime * rotationSpeed);
+        transform.RotateAround(transform.position, Vector3.right, 1f * Time.deltaTime * rotationSpeed / 10f);
     }
 }

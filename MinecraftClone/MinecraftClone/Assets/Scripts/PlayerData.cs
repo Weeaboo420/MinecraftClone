@@ -11,7 +11,6 @@ public class PlayerData : MonoBehaviour
     private bool useCursor = false;
     private int selectedBlock = 0;
     private Text blockText;
-    public GameObject uiBlock;
     public float x, y;
     public GameObject SelectedBlockCursor;
     private Camera mainCam;
@@ -27,7 +26,7 @@ public class PlayerData : MonoBehaviour
 
     void Start()
     {
-        blockText = GameObject.Find("CurrentBlock").GetComponent<Text>();
+        blockText = GameObject.Find("CurrentBlockPanel").transform.Find("CurrentBlock").GetComponent<Text>();
         SelectedBlockChanged();
         mainCam = GameObject.Find("Main Camera").GetComponent<Camera>();        
     }
@@ -36,44 +35,6 @@ public class PlayerData : MonoBehaviour
     {
         VoxelData.VoxelNames blockName = (VoxelData.VoxelNames)selectedBlock;
         blockText.text = blockName.ToString();
-
-        if(blockName == VoxelData.VoxelNames.Air)
-        {
-            foreach(Transform child in uiBlock.transform)
-            {
-                if(child.transform.name != "Point Light")
-                {
-                    child.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", null);
-                }
-            }
-        } 
-        
-        else 
-        {
-            foreach(Transform child in uiBlock.transform)
-            {
-                if(child.transform.name != "Point Light")
-                {
-                    child.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", Resources.Load<Texture2D>("GUI/atlas"));
-                    Voxel block = VoxelData.GetVoxel((byte)selectedBlock);
-
-                    if(child.transform.name == "TopFace")
-                    {
-                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", Utilities.GetUvCoordinates(block, block.Faces[0], x, y));
-                    }
-
-                    if(child.transform.name == "FrontFace")
-                    {
-                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((VoxelData.GetVoxel((byte)selectedBlock).Faces[2] * 0.1f - 0.1f) - VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));
-                    }
-
-                    if(child.transform.name == "LeftFace")
-                    {
-                        child.GetComponent<MeshRenderer>().material.SetTextureOffset("_MainTex", new Vector2((VoxelData.GetVoxel((byte)selectedBlock).Faces[4] * 0.1f - 0.1f) - VoxelData.ArtifactOffset, 0 - VoxelData.ArtifactOffset));
-                    }
-                }
-            }            
-        }
 
     }
 
